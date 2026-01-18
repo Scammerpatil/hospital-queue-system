@@ -2,7 +2,6 @@ package com.saket.hospital_queue_system.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "doctors")

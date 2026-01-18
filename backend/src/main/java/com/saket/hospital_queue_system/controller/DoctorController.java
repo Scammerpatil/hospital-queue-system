@@ -56,6 +56,18 @@ public class DoctorController {
     }
   }
 
+  @GetMapping
+  public ResponseEntity<List<Doctor>> getAllDoctors() {
+    System.out.println("DoctorController: GET /api/doctor");
+    try {
+      List<Doctor> doctors = doctorService.getAvailableDoctors();
+      return ResponseEntity.ok(doctors);
+    } catch (Exception e) {
+      System.out.println("DoctorController: Error retrieving doctors: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
+
   @GetMapping("/profile")
   public ResponseEntity<DoctorProfileResponse> getDoctorProfile() {
     System.out.println("DoctorController: GET /api/doctor/profile");
