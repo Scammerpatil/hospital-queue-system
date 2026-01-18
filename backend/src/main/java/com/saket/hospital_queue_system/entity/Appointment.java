@@ -28,7 +28,7 @@ public class Appointment {
   private Doctor doctor;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "booked_by_user_id", nullable = false)
+  @JoinColumn(name = "booked_by_user_id") // Made nullable for backward compatibility
   private User bookedByUser; // User who booked (may differ from patient)
 
   @Column(nullable = false)
@@ -38,21 +38,20 @@ public class Appointment {
   private LocalTime appointmentTime;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @Column(nullable = true)
   private AppointmentType appointmentType; // IN_PERSON or ONLINE
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private AppointmentStatus status; // BOOKED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW
+  @Column(length = 20)
+  private String status; // Will be migrated to AppointmentStatus enum in Phase 8
 
-  @Column(nullable = false)
+  @Column(nullable = true)
   private Integer queueNumber; // Assigned queue position
 
   @Column(length = 250)
   private String meetingLink; // For online appointments
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @Column(nullable = true)
   private PaymentStatus paymentStatus; // PENDING, COMPLETED, FAILED, REFUNDED
 
   @Column(length = 250)

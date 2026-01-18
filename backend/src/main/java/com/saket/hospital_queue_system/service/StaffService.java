@@ -7,7 +7,6 @@ import com.saket.hospital_queue_system.dto.UpdateStaffProfileRequest;
 import com.saket.hospital_queue_system.entity.Appointment;
 import com.saket.hospital_queue_system.entity.Staff;
 import com.saket.hospital_queue_system.entity.User;
-import com.saket.hospital_queue_system.entity.AppointmentStatus;
 import com.saket.hospital_queue_system.repository.AppointmentRepository;
 import com.saket.hospital_queue_system.repository.DoctorRepository;
 import com.saket.hospital_queue_system.repository.PatientRepository;

@@ -2,7 +2,6 @@ package com.saket.hospital_queue_system.repository;
 
 import com.saket.hospital_queue_system.entity.Appointment;
 import com.saket.hospital_queue_system.entity.Patient;
-import com.saket.hospital_queue_system.entity.AppointmentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
@@ -16,7 +15,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
   List<Appointment> findByPatientOrderByAppointmentDateDesc(Patient patient);
 
-  List<Appointment> findByPatientAndStatusOrderByAppointmentDateDesc(Patient patient, AppointmentStatus status);
+  List<Appointment> findByPatientAndStatusOrderByAppointmentDateDesc(Patient patient, String status);
 
   List<Appointment> findByDoctorId(Long doctorId);
 }

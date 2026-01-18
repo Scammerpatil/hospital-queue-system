@@ -7,7 +7,6 @@ import com.saket.hospital_queue_system.entity.Appointment;
 import com.saket.hospital_queue_system.entity.Doctor;
 import com.saket.hospital_queue_system.entity.Patient;
 import com.saket.hospital_queue_system.entity.User;
-import com.saket.hospital_queue_system.entity.AppointmentStatus;
 import com.saket.hospital_queue_system.entity.PaymentStatus;
 import com.saket.hospital_queue_system.repository.AppointmentRepository;
 import com.saket.hospital_queue_system.repository.DoctorRepository;
@@ -72,7 +71,7 @@ public class AppointmentService {
 
     boolean conflictExists = existingAppointments.stream()
         .anyMatch(a -> a.getAppointmentTime().equals(request.getAppointmentTime())
-            && !a.getStatus().equals(AppointmentStatus.CANCELLED));
+            && !("CANCELLED".equals(a.getStatus())));
 
     if (conflictExists) {
       throw new RuntimeException("ERROR: Dr. " + doctor.getUser().getName() + " is already booked at "
@@ -83,13 +82,21 @@ public class AppointmentService {
     Appointment appointment = new Appointment();
     appointment.setPatient(patient);
     appointment.setDoctor(doctor);
-    appointment.setBookedByUser(patientUser);
+    if (patientUser != null) {
+      appointment.setBookedByUser(patientUser);
+    }
     appointment.setAppointmentDate(request.getAppointmentDate());
     appointment.setAppointmentTime(request.getAppointmentTime());
-    appointment.setAppointmentType(request.getAppointmentType());
-    appointment.setStatus(AppointmentStatus.BOOKED);
+    if (request.getAppointmentType() != null) {
+      appointment.setAppointmentType(request.getAppointmentType());
+    }
+    appointment.setStatus("BOOKED");
     appointment.setQueueNumber(0); // Will be assigned by queue service
-    appointment.setPaymentStatus(PaymentStatus.PENDING);
+    if (request.getAppointmentType() != null && request.getAppointmentType().name().equals("ONLINE")) {
+      appointment.setPaymentStatus(PaymentStatus.PENDING);
+    } else {
+      appointment.setPaymentStatus(PaymentStatus.PENDING); // Default to PENDING for both
+    }
     appointment.setNotes(request.getNotes());
 
     Appointment savedAppointment = appointmentRepository.save(appointment);
@@ -174,8 +181,8 @@ public class AppointmentService {
         .orElseThrow(() -> new RuntimeException("ERROR: Appointment with ID " + appointmentId + " not found"));
 
     // Validate status transition
-    AppointmentStatus currentStatus = appointment.getStatus();
-    AppointmentStatus newStatus = request.getStatus();
+    String currentStatus = appointment.getStatus();
+    String newStatus = request.getStatus();
 
     validateStatusTransition(currentStatus, newStatus);
 
@@ -199,15 +206,15 @@ public class AppointmentService {
     Appointment appointment = appointmentRepository.findById(appointmentId)
         .orElseThrow(() -> new RuntimeException("ERROR: Appointment with ID " + appointmentId + " not found"));
 
-    if (AppointmentStatus.COMPLETED.equals(appointment.getStatus())) {
+    if ("COMPLETED".equals(appointment.getStatus())) {
       throw new RuntimeException("ERROR: Cannot cancel a completed appointment");
     }
 
-    if (AppointmentStatus.CANCELLED.equals(appointment.getStatus())) {
+    if ("CANCELLED".equals(appointment.getStatus())) {
       throw new RuntimeException("ERROR: Appointment is already cancelled");
     }
 
-    appointment.setStatus(AppointmentStatus.CANCELLED);
+    appointment.setStatus("CANCELLED");
     Appointment updatedAppointment = appointmentRepository.save(appointment);
 
     return convertToResponseDto(updatedAppointment);
@@ -216,27 +223,27 @@ public class AppointmentService {
   /**
    * Validate status transitions
    */
-  private void validateStatusTransition(AppointmentStatus currentStatus, AppointmentStatus newStatus) {
+  private void validateStatusTransition(String currentStatus, String newStatus) {
     // BOOKED -> IN_PROGRESS, CANCELLED
     // IN_PROGRESS -> COMPLETED, CANCELLED
     // COMPLETED -> (no transitions allowed)
     // CANCELLED -> (no transitions allowed)
 
-    if (AppointmentStatus.COMPLETED.equals(currentStatus)) {
+    if ("COMPLETED".equals(currentStatus)) {
       throw new RuntimeException("ERROR: Cannot update a completed appointment. Final status cannot be changed.");
     }
 
-    if (AppointmentStatus.CANCELLED.equals(currentStatus)) {
+    if ("CANCELLED".equals(currentStatus)) {
       throw new RuntimeException("ERROR: Cannot update a cancelled appointment. Cancelled appointments are immutable.");
     }
 
-    if (AppointmentStatus.BOOKED.equals(currentStatus)) {
-      if (!(AppointmentStatus.IN_PROGRESS.equals(newStatus) || AppointmentStatus.CANCELLED.equals(newStatus))) {
+    if ("BOOKED".equals(currentStatus)) {
+      if (!("IN_PROGRESS".equals(newStatus) || "CANCELLED".equals(newStatus))) {
         throw new RuntimeException(
             "ERROR: Appointment in BOOKED status can only transition to IN_PROGRESS or CANCELLED, not " + newStatus);
       }
-    } else if (AppointmentStatus.IN_PROGRESS.equals(currentStatus)) {
-      if (!(AppointmentStatus.COMPLETED.equals(newStatus) || AppointmentStatus.CANCELLED.equals(newStatus))) {
+    } else if ("IN_PROGRESS".equals(currentStatus)) {
+      if (!("COMPLETED".equals(newStatus) || "CANCELLED".equals(newStatus))) {
         throw new RuntimeException(
             "ERROR: Appointment in IN_PROGRESS status can only transition to COMPLETED or CANCELLED, not " + newStatus);
       }

@@ -8,6 +8,6 @@ import com.saket.hospital_queue_system.entity.AppointmentStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateAppointmentStatusRequest {
-  private AppointmentStatus status;
+  private String status; // BOOKED, IN_PROGRESS, COMPLETED, CANCELLED
   private String notes;
 }
