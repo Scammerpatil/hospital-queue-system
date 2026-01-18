@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { authService } from "@/services/authService";
+import { patientService } from "@/services/patientService";
 import {
   IconUser,
   IconMail,
@@ -16,6 +16,8 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import Loading from "@/components/Loading";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface PatientProfile {
   id: number;
@@ -35,16 +37,20 @@ export default function PatientProfile() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<PatientProfile>>({});
+  const [saving, setSaving] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const response = await authService.getCurrentUser();
-        setProfile(response);
-        setFormData(response);
+        const response = await patientService.getPatientProfile();
+        const profileData = response.data || response;
+        setProfile(profileData as PatientProfile);
+        setFormData(profileData);
       } catch (err: any) {
         setError(err.message || "Failed to load profile");
+        console.error("Error fetching profile:", err);
       } finally {
         setLoading(false);
       }
@@ -63,12 +69,31 @@ export default function PatientProfile() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Logic for API call would go here
-    setProfile(formData as PatientProfile);
-    setEditing(false);
+    try {
+      setSaving(true);
+      const response = await patientService.updatePatientProfile(
+        formData as any
+      );
+      const updatedProfile = response.data || response;
+      setProfile(updatedProfile as PatientProfile);
+      setFormData(updatedProfile);
+      setEditing(false);
+      // Show success message
+      toast.success("Profile updated successfully!");
+    } catch (err: any) {
+      setError(err.message || "Failed to update profile");
+      console.error("Error updating profile:", err);
+      toast.error(
+        "Failed to update profile: " + (err.message || "Unknown error")
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) return <Loading />;
+  if (error) return <div className="text-error">{error}</div>;
+  if (!profile) return <div className="text-error">No profile data found</div>;
 
   return (
     <div className="max-w-7xl mx-auto p-4 lg:p-8">
@@ -191,6 +216,7 @@ export default function PatientProfile() {
                         value={formData.gender || ""}
                         onChange={handleChange}
                       >
+                        <option value="">Select Gender</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                         <option value="Other">Other</option>
@@ -259,8 +285,21 @@ export default function PatientProfile() {
 
           {editing && (
             <div className="flex flex-col gap-3">
-              <button type="submit" className="btn btn-primary shadow-lg gap-2">
-                <IconCheck size={20} /> Save All Changes
+              <button
+                type="submit"
+                disabled={saving}
+                className="btn btn-primary shadow-lg gap-2"
+              >
+                {saving ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <IconCheck size={20} /> Save All Changes
+                  </>
+                )}
               </button>
               <button
                 type="button"

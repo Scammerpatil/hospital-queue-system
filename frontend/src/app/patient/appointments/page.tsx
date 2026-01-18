@@ -171,7 +171,7 @@ export default function MyAppointments() {
             return (
               <div
                 key={apt.id}
-                className="group card bg-base-100 border border-base-300 hover:border-primary/40 hover:shadow-2xl transition-all duration-300"
+                className="group card bg-base-200 border border-base-300 hover:border-primary/40 hover:shadow-2xl transition-all duration-300"
               >
                 <div className="card-body p-6">
                   {/* Doctor Info */}
@@ -217,7 +217,7 @@ export default function MyAppointments() {
 
                   {/* Notes Preview */}
                   {apt.notes && (
-                    <div className="mt-4 flex gap-2">
+                    <div className="flex gap-2">
                       <IconNotes
                         size={16}
                         className="mt-1 opacity-40 shrink-0"
@@ -229,7 +229,7 @@ export default function MyAppointments() {
                   )}
 
                   {/* Action Footer */}
-                  <div className="card-actions justify-end mt-6 pt-4 border-t border-base-200">
+                  <div className="card-actions justify-end mt-6 pt-4 border-t border-base-content">
                     <Link
                       href={`/patient/appointments/${apt.id}`}
                       className="btn btn-neutral btn-sm font-bold text-xs"

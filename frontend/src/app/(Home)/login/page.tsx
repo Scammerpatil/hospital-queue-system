@@ -81,31 +81,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Role Selector (Segmented Control) */}
-          <div className="mb-4">
-            <label className="text-[10px] uppercase font-black opacity-50 tracking-widest mb-3 block text-center">
-              Continue as a
-            </label>
-            <div className="grid grid-cols-3 gap-2 bg-base-200 p-1.5 rounded-2xl">
-              {["patient", "doctor", "staff"].map((r) => (
-                <button
-                  key={r}
-                  onClick={() => handleInputChange("role", r)}
-                  className={`py-2 px-1 rounded-xl text-xs font-black transition-all capitalize flex flex-col items-center gap-1 ${
-                    form.role === r
-                      ? "bg-base-100 text-primary shadow-sm"
-                      : "text-base-content/40 hover:text-base-content"
-                  }`}
-                >
-                  {r === "patient" && <IconUserCircle size={18} />}
-                  {r === "doctor" && <IconStethoscope size={18} />}
-                  {r === "staff" && <IconUsers size={18} />}
-                  {r}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Form Fields */}
           <div className="space-y-5">
             <fieldset className="fieldset">

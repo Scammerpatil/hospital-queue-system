@@ -12,11 +12,12 @@ import {
   IconNotes,
   IconCircleCheck,
   IconAlertCircle,
-  IconChevronLeft,
   IconCurrencyDollar,
   IconId,
+  IconCurrencyRupee,
 } from "@tabler/icons-react";
 import Loading from "@/components/Loading";
+import toast from "react-hot-toast";
 
 interface Doctor {
   id: number;
@@ -37,8 +38,6 @@ export default function BookAppointmentPage() {
   const router = useRouter();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | "">("");
   const [appointmentDate, setAppointmentDate] = useState("");
@@ -53,7 +52,7 @@ export default function BookAppointmentPage() {
         const response = await doctorListService.getAvailableDoctors();
         setDoctors(response);
       } catch (err: any) {
-        setError(err.message || "Failed to load doctors");
+        toast.error(err.message || "Failed to load doctors");
       } finally {
         setLoading(false);
       }
@@ -64,23 +63,22 @@ export default function BookAppointmentPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDoctorId || !appointmentDate || !appointmentTime) {
-      setError("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
     try {
       setSubmitting(true);
-      setError(null);
       await appointmentService.createAppointment({
         doctorId: Number(selectedDoctorId),
         appointmentDate,
         appointmentTime,
         notes: notes || undefined,
       });
-      setSuccess(true);
+      toast.success("Appointment Booked Successfully");
       setTimeout(() => router.push("/patient/appointments"), 2000);
     } catch (err: any) {
-      setError(err.message || "Failed to book appointment");
+      toast.error(err.message || "Failed to book appointment");
     } finally {
       setSubmitting(false);
     }
@@ -103,24 +101,6 @@ export default function BookAppointmentPage() {
             Find the right specialist and secure your slot in minutes. Your
             health journey starts here.
           </p>
-        </div>
-
-        {/* Status Alerts */}
-        <div className="space-y-4 mb-8">
-          {success && (
-            <div className="alert alert-success shadow-xl border-none text-success-content animate-bounce">
-              <IconCircleCheck size={24} />
-              <span className="font-bold">
-                Appointment confirmed! We're preparing your session details...
-              </span>
-            </div>
-          )}
-          {error && (
-            <div className="alert alert-error shadow-lg border-none">
-              <IconAlertCircle size={24} />
-              <span className="font-semibold">{error}</span>
-            </div>
-          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -187,12 +167,12 @@ export default function BookAppointmentPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
-                          <IconCurrencyDollar
+                          <IconCurrencyRupee
                             size={16}
                             className="text-success"
                           />
                           <span className="font-bold text-success">
-                            ${doctor.consultationFee}
+                            {doctor.consultationFee}
                           </span>
                           <span className="opacity-40 text-xs text-base-content font-bold">
                             per session
@@ -200,9 +180,8 @@ export default function BookAppointmentPage() {
                         </div>
                       </div>
 
-                      {/* Hidden Bio that shows on hover/select */}
                       <div
-                        className={`mt-4 pt-4 border-t border-base-200 transition-all ${
+                        className={`mt-4 pt-4 border-t border-base-content transition-all ${
                           isSelected ? "opacity-100" : "opacity-0 h-0"
                         }`}
                       >

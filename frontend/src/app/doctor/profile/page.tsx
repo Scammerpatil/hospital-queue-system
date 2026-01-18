@@ -1,45 +1,50 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { authService } from "@/services/authService";
-
-interface DoctorProfile {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  specialization: string;
-  licenseNumber: string;
-  yearsOfExperience: string;
-  qualifications: string;
-  bio: string;
-  clinicAddress: string;
-}
+import {
+  getDoctorProfile,
+  updateDoctorProfile,
+  DoctorProfile as Doctor,
+  UpdateDoctorProfileRequest,
+} from "@/services/doctorProfileService";
+import {
+  IconStethoscope,
+  IconMail,
+  IconPhone,
+  IconId,
+  IconCash,
+  IconClock,
+  IconTextCaption,
+  IconEdit,
+  IconCheck,
+  IconX,
+  IconDeviceFloppy,
+} from "@tabler/icons-react";
+import toast from "react-hot-toast";
+import Loading from "@/components/Loading";
 
 export default function DoctorProfile() {
-  const [profile, setProfile] = useState<DoctorProfile | null>(null);
+  const [profile, setProfile] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState<Partial<DoctorProfile>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<Partial<UpdateDoctorProfileRequest>>(
+    {}
+  );
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const response = await authService.getCurrentUser();
-        console.log("Doctor profile fetched:", response);
+        const response = await getDoctorProfile();
         setProfile(response);
         setFormData(response);
-        setError(null);
       } catch (err: any) {
-        console.error("Error fetching profile:", err);
-        setError(err.message || "Failed to load profile");
+        toast.error(err.message || "Failed to load profile");
       } finally {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, []);
 
@@ -52,269 +57,214 @@ export default function DoctorProfile() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProfile(formData as DoctorProfile);
-    setEditing(false);
+    try {
+      setIsSaving(true);
+      const response = await updateDoctorProfile(
+        formData as UpdateDoctorProfileRequest
+      );
+      setProfile(response);
+      setEditing(false);
+      toast.success("Profile updated successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save profile");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
-
-  if (error || !profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="alert alert-error">
-          <span>{error || "Profile not found"}</span>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <Loading />;
+  if (!profile) return null;
 
   return (
-    <div className="min-h-screen bg-base-100 p-4 lg:p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 flex justify-between items-start">
-          <div>
-            <h1 className="text-4xl font-bold text-base-content">
-              Doctor Profile
-            </h1>
-            <p className="text-base-content/70 mt-2">
-              Manage your professional information
-            </p>
+    <div className="max-w-7xl mx-auto p-4 lg:p-8">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
+        <div className="flex items-center gap-6">
+          <div className="w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center text-primary border-2 border-primary/20 shadow-inner">
+            <IconStethoscope size={48} />
           </div>
-          <button
-            className={`btn ${editing ? "btn-ghost" : "btn-primary"}`}
-            onClick={() => setEditing(!editing)}
-          >
-            {editing ? "Cancel" : "Edit Profile"}
-          </button>
-        </div>
-
-        {/* Profile Card */}
-        <div className="card bg-base-200 shadow">
-          <form onSubmit={handleSubmit} className="card-body">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Name */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">Full Name</span>
-                </label>
-                {editing ? (
-                  <input
-                    type="text"
-                    name="name"
-                    className="input input-bordered"
-                    value={formData.name || ""}
-                    onChange={handleChange}
-                    disabled
-                  />
-                ) : (
-                  <div className="input input-bordered bg-base-100">
-                    {profile.name}
-                  </div>
-                )}
-              </div>
-
-              {/* Email */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">Email</span>
-                </label>
-                {editing ? (
-                  <input
-                    type="email"
-                    name="email"
-                    className="input input-bordered"
-                    value={formData.email || ""}
-                    onChange={handleChange}
-                    disabled
-                  />
-                ) : (
-                  <div className="input input-bordered bg-base-100">
-                    {profile.email}
-                  </div>
-                )}
-              </div>
-
-              {/* Phone */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">Phone</span>
-                </label>
-                {editing ? (
-                  <input
-                    type="tel"
-                    name="phone"
-                    className="input input-bordered"
-                    value={formData.phone || ""}
-                    onChange={handleChange}
-                  />
-                ) : (
-                  <div className="input input-bordered bg-base-100">
-                    {profile.phone}
-                  </div>
-                )}
-              </div>
-
-              {/* Specialization */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">
-                    Specialization
-                  </span>
-                </label>
-                {editing ? (
-                  <input
-                    type="text"
-                    name="specialization"
-                    className="input input-bordered"
-                    value={formData.specialization || ""}
-                    onChange={handleChange}
-                    disabled
-                  />
-                ) : (
-                  <div className="input input-bordered bg-base-100">
-                    {profile.specialization}
-                  </div>
-                )}
-              </div>
-
-              {/* License Number */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">
-                    License Number
-                  </span>
-                </label>
-                {editing ? (
-                  <input
-                    type="text"
-                    name="licenseNumber"
-                    className="input input-bordered"
-                    value={formData.licenseNumber || ""}
-                    onChange={handleChange}
-                    disabled
-                  />
-                ) : (
-                  <div className="input input-bordered bg-base-100">
-                    {profile.licenseNumber}
-                  </div>
-                )}
-              </div>
-
-              {/* Years of Experience */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">
-                    Years of Experience
-                  </span>
-                </label>
-                {editing ? (
-                  <input
-                    type="text"
-                    name="yearsOfExperience"
-                    className="input input-bordered"
-                    value={formData.yearsOfExperience || ""}
-                    onChange={handleChange}
-                  />
-                ) : (
-                  <div className="input input-bordered bg-base-100">
-                    {profile.yearsOfExperience}
-                  </div>
-                )}
-              </div>
-
-              {/* Qualifications */}
-              <div className="form-control md:col-span-2">
-                <label className="label">
-                  <span className="label-text font-semibold">
-                    Qualifications
-                  </span>
-                </label>
-                {editing ? (
-                  <textarea
-                    name="qualifications"
-                    className="textarea textarea-bordered"
-                    value={formData.qualifications || ""}
-                    onChange={handleChange}
-                    rows={2}
-                  ></textarea>
-                ) : (
-                  <div className="textarea textarea-bordered bg-base-100">
-                    {profile.qualifications}
-                  </div>
-                )}
-              </div>
-
-              {/* Clinic Address */}
-              <div className="form-control md:col-span-2">
-                <label className="label">
-                  <span className="label-text font-semibold">
-                    Clinic Address
-                  </span>
-                </label>
-                {editing ? (
-                  <textarea
-                    name="clinicAddress"
-                    className="textarea textarea-bordered"
-                    value={formData.clinicAddress || ""}
-                    onChange={handleChange}
-                    rows={2}
-                  ></textarea>
-                ) : (
-                  <div className="textarea textarea-bordered bg-base-100">
-                    {profile.clinicAddress}
-                  </div>
-                )}
-              </div>
-
-              {/* Bio */}
-              <div className="form-control md:col-span-2">
-                <label className="label">
-                  <span className="label-text font-semibold">
-                    Professional Bio
-                  </span>
-                </label>
-                {editing ? (
-                  <textarea
-                    name="bio"
-                    className="textarea textarea-bordered"
-                    value={formData.bio || ""}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="Tell patients about your expertise..."
-                  ></textarea>
-                ) : (
-                  <div className="textarea textarea-bordered bg-base-100">
-                    {profile.bio || "No bio added"}
-                  </div>
-                )}
-              </div>
+          <div>
+            <h1 className="text-4xl font-black tracking-tight">
+              {profile.name}
+            </h1>
+            <div className="flex items-center gap-2 text-primary font-bold">
+              <span className="badge badge-primary badge-outline font-black uppercase tracking-widest px-4">
+                {profile.specialization}
+              </span>
             </div>
-
-            {/* Actions */}
-            {editing && (
-              <div className="card-actions justify-end mt-6">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => setEditing(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Save Changes
-                </button>
-              </div>
-            )}
-          </form>
+          </div>
         </div>
+
+        {!editing && (
+          <button
+            onClick={() => setEditing(true)}
+            className="btn btn-primary btn-wide shadow-lg gap-2"
+          >
+            <IconEdit size={20} /> Edit Professional Profile
+          </button>
+        )}
       </div>
+
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+      >
+        {/* Left: Professional Stats */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="card bg-base-200 border border-base-content/70 h-full">
+            <div className="card-body gap-6">
+              <h2 className="text-xl font-black flex items-center gap-2 border-b border-base-200 pb-4">
+                <IconId className="text-primary" /> Core Credentials
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend uppercase font-black opacity-40">
+                    License Number
+                  </legend>
+                  <div className="flex items-center gap-3">
+                    <IconId size={18} className="opacity-30" />
+                    <input
+                      className={`input w-full font-bold ${
+                        editing ? "input-primary" : "input-ghost"
+                      }`}
+                      disabled={!editing}
+                      value={profile.licenseNumber}
+                      name="licenseNumber"
+                      onChange={handleChange}
+                    />
+                  </div>
+                </fieldset>
+
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend uppercase font-black opacity-40">
+                    Consultation Fee
+                  </legend>
+                  <div className="flex items-center gap-3">
+                    <IconCash size={18} className="opacity-30" />
+                    <input
+                      name="consultationFee"
+                      type="number"
+                      disabled={!editing}
+                      className={`input w-full font-bold ${
+                        editing ? "input-primary" : "input-ghost"
+                      }`}
+                      value={formData.consultationFee || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </fieldset>
+
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend uppercase font-black opacity-40">
+                    Email Address
+                  </legend>
+                  <div className="flex items-center gap-3">
+                    <IconMail size={18} className="opacity-30" />
+                    <input
+                      name="email"
+                      disabled={!editing}
+                      className={`input w-full font-bold ${
+                        editing ? "input-primary" : "input-ghost"
+                      }`}
+                      value={formData.email || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </fieldset>
+
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend uppercase font-black opacity-40">
+                    Phone Number
+                  </legend>
+                  <div className="flex items-center gap-3">
+                    <IconPhone size={18} className="opacity-30" />
+                    <input
+                      name="phone"
+                      disabled={!editing}
+                      className={`input w-full font-bold ${
+                        editing ? "input-primary" : "input-ghost"
+                      }`}
+                      value={formData.phone || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </fieldset>
+              </div>
+
+              <fieldset className="fieldset">
+                <legend className="fieldset-legend uppercase font-black opacity-40">
+                  Availability (Daily Schedule)
+                </legend>
+                <div className="flex items-center gap-3">
+                  <IconClock size={18} className="opacity-30" />
+                  <input
+                    name="availableSlots"
+                    disabled={!editing}
+                    placeholder="e.g. 09:00-17:00"
+                    className={`input w-full font-bold ${
+                      editing ? "input-primary" : "input-ghost"
+                    }`}
+                    value={formData.availableSlots || ""}
+                    onChange={handleChange}
+                  />
+                </div>
+              </fieldset>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Bio & Actions */}
+        <div className="space-y-6">
+          <div className="card bg-base-200 border border-base-300">
+            <div className="card-body">
+              <h2 className="text-xl font-black flex items-center gap-2 mb-4">
+                <IconTextCaption className="text-primary" /> Professional Bio
+              </h2>
+              <textarea
+                name="bio"
+                disabled={!editing}
+                rows={8}
+                className={`textarea w-full font-medium leading-relaxed ${
+                  editing
+                    ? "textarea-primary bg-base-100"
+                    : "textarea-ghost bg-transparent"
+                }`}
+                placeholder="Share your expertise and background..."
+                value={formData.bio || ""}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          {editing && (
+            <div className="flex flex-col gap-3">
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="btn btn-primary shadow-lg gap-2"
+              >
+                {isSaving ? (
+                  <span className="loading loading-spinner" />
+                ) : (
+                  <IconDeviceFloppy size={20} />
+                )}
+                Save Profile Changes
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditing(false);
+                  setFormData(profile);
+                }}
+                className="btn btn-neutral gap-2"
+              >
+                <IconX size={20} /> Discard Changes
+              </button>
+            </div>
+          )}
+        </div>
+      </form>
     </div>
   );
 }

@@ -30,7 +30,7 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
   },
   {
     title: "Settings",
-    path: "/staff/settings",
+    path: "/staff/profile",
     icon: <IconSettings size={28} />,
   },
 ];
