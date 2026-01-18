@@ -5,6 +5,7 @@ import {
   IconClipboardList,
   IconUser,
   IconReportMedical,
+  IconHospital,
 } from "@tabler/icons-react";
 
 export const SIDENAV_ITEMS: SideNavItem[] = [
@@ -12,6 +13,11 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     title: "Dashboard",
     path: "/patient/dashboard",
     icon: <IconHome size={28} />,
+  },
+  {
+    title: "Find Clinics",
+    path: "/patient/clinics",
+    icon: <IconHospital size={28} />,
   },
   {
     title: "Book Appointment",
