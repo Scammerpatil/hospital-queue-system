@@ -36,6 +36,39 @@ public class QueueService {
   @Autowired
   private UserRepository userRepository;
 
+  /**
+   * Create queue entry automatically when appointment is booked
+   */
+  public void createQueueEntry(Appointment appointment) {
+    logger.info("Creating queue entry for appointment ID: {}", appointment.getId());
+
+    // Get all queue entries for this doctor on the same date
+    List<Queue> existingQueues = queueRepository.findTodayQueueByDoctor(appointment.getDoctor());
+
+    // Calculate next position (FIFO)
+    int nextPosition = existingQueues.size() + 1;
+
+    // Calculate estimated wait time
+    Integer estimatedWait = (nextPosition - 1) * AVG_CONSULTATION_MINUTES;
+
+    // Create queue entry
+    Queue queue = new Queue();
+    queue.setAppointment(appointment);
+    queue.setPatient(appointment.getPatient());
+    queue.setDoctor(appointment.getDoctor());
+    queue.setStatus(QueueStatus.WAITING);
+    queue.setPosition(nextPosition);
+    queue.setEstimatedWaitMinutes(estimatedWait);
+
+    Queue savedQueue = queueRepository.save(queue);
+    logger.info("Queue entry created with position: {} for doctor: {}", nextPosition,
+        appointment.getDoctor().getUser().getName());
+
+    // Update appointment with queue number
+    appointment.setQueueNumber(nextPosition);
+    appointmentRepository.save(appointment);
+  }
+
   public QueueStatusResponse checkIn(String patientEmail, QueueCheckInRequest request) {
     logger.info("Patient {} checking in for appointment {}", patientEmail, request.getAppointmentId());
 

@@ -37,6 +37,9 @@ public class AppointmentService {
   @Autowired
   private UserRepository userRepository;
 
+  @Autowired
+  private QueueService queueService;
+
   /**
    * Create a new appointment by patient
    */
@@ -101,6 +104,15 @@ public class AppointmentService {
 
     Appointment savedAppointment = appointmentRepository.save(appointment);
     logger.info("Appointment created with ID: {}", savedAppointment.getId());
+
+    // Automatically create queue entry for the appointment
+    try {
+      queueService.createQueueEntry(savedAppointment);
+      logger.info("Queue entry created automatically for appointment ID: {}", savedAppointment.getId());
+    } catch (Exception e) {
+      logger.warn("Failed to create queue entry for appointment ID: {}", savedAppointment.getId(), e);
+      // Don't fail the appointment creation if queue creation fails
+    }
 
     return convertToResponseDto(savedAppointment);
   }
