@@ -7,6 +7,7 @@ import com.saket.hospital_queue_system.dto.UpdateDoctorProfileRequest;
 import com.saket.hospital_queue_system.entity.Appointment;
 import com.saket.hospital_queue_system.entity.Doctor;
 import com.saket.hospital_queue_system.entity.User;
+import com.saket.hospital_queue_system.entity.AppointmentStatus;
 import com.saket.hospital_queue_system.repository.AppointmentRepository;
 import com.saket.hospital_queue_system.repository.DoctorRepository;
 import com.saket.hospital_queue_system.repository.UserRepository;
@@ -47,7 +48,7 @@ public class DoctorService {
         // Count statistics
         int totalAppointments = allAppointments.size();
         int completedAppointments = (int) allAppointments.stream()
-                .filter(a -> "COMPLETED".equals(a.getStatus()))
+                .filter(a -> AppointmentStatus.COMPLETED.equals(a.getStatus()))
                 .count();
 
         // Get today's appointments

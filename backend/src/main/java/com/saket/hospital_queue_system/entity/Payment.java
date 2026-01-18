@@ -24,8 +24,9 @@ public class Payment {
   @Column(nullable = false)
   private Double amount;
 
-  @Column(nullable = false, length = 20)
-  private String status; // PENDING, COMPLETED, FAILED, REFUNDED
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private PaymentStatus status; // PENDING, COMPLETED, FAILED, REFUNDED
 
   @Column(length = 50)
   private String paymentMethod; // RAZORPAY, CASH, ONLINE

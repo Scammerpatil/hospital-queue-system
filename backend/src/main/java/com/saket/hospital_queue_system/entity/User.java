@@ -41,6 +41,9 @@ public class User implements UserDetails {
   @Column(nullable = false)
   private Boolean isActive = true;
 
+  @Column(nullable = false)
+  private Boolean isVerified = false;
+
   @Column(name = "profileImage", nullable = false, length = 100)
   private String profileImage;
 

@@ -7,6 +7,7 @@ import com.saket.hospital_queue_system.dto.UpdatePatientProfileRequest;
 import com.saket.hospital_queue_system.entity.Appointment;
 import com.saket.hospital_queue_system.entity.Patient;
 import com.saket.hospital_queue_system.entity.User;
+import com.saket.hospital_queue_system.entity.AppointmentStatus;
 import com.saket.hospital_queue_system.repository.AppointmentRepository;
 import com.saket.hospital_queue_system.repository.PatientRepository;
 import com.saket.hospital_queue_system.repository.UserRepository;
@@ -47,10 +48,10 @@ public class PatientService {
         // Count statistics
         int totalAppointments = allAppointments.size();
         int completedAppointments = (int) allAppointments.stream()
-                .filter(a -> "COMPLETED".equals(a.getStatus()))
+                .filter(a -> AppointmentStatus.COMPLETED.equals(a.getStatus()))
                 .count();
         int upcomingAppointments = (int) allAppointments.stream()
-                .filter(a -> "BOOKED".equals(a.getStatus()) && a.getAppointmentDate().isAfter(LocalDate.now()))
+                .filter(a -> AppointmentStatus.BOOKED.equals(a.getStatus()) && a.getAppointmentDate().isAfter(LocalDate.now()))
                 .count();
 
         // Get recent appointments (limit to 5)

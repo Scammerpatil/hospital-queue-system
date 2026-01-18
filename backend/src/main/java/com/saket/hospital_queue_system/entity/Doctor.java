@@ -33,6 +33,15 @@ public class Doctor {
   @Column(name = "consultation_fee")
   private Double consultationFee;
 
+  @Column(length = 100)
+  private String clinicName; // Clinic name
+
+  @Column(length = 100)
+  private String district; // District name
+
+  @Column(length = 100)
+  private String taluka; // Taluka/Subdivision name
+
   @Column(length = 20)
   private String availableSlots; // e.g., "09:00-17:00"
 
