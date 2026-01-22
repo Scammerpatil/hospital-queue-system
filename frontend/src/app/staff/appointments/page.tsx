@@ -66,7 +66,12 @@ export default function ManageAppointments() {
     try {
       setUpdating(appointmentId);
       await appointmentService.updateAppointmentStatus(appointmentId, {
-        status: newStatus,
+        status: newStatus as
+          | "BOOKED"
+          | "CHECKED_IN"
+          | "IN_PROGRESS"
+          | "COMPLETED"
+          | "CANCELLED",
       });
       setAppointments((prev) =>
         prev.map((apt) =>
@@ -205,7 +210,7 @@ export default function ManageAppointments() {
                           {apt.patientName}
                         </h3>
                         <div className="flex items-center gap-1 opacity-50">
-                          {apt.patientGender === "MALE" ? (
+                          {apt.patientGender?.toLowerCase() === "male" ? (
                             <IconGenderMale size={14} />
                           ) : (
                             <IconGenderFemale size={14} />
@@ -245,7 +250,7 @@ export default function ManageAppointments() {
                   </div>
 
                   {/* Notes */}
-                  <div className="flex gap-2 min-h-[40px]">
+                  <div className="flex gap-2 min-h-10">
                     <IconNotes size={14} className="mt-1 opacity-30 shrink-0" />
                     <p className="text-[11px] opacity-60 font-medium italic line-clamp-2 leading-relaxed">
                       {apt.notes || "No clinical notes provided by patient."}
@@ -256,31 +261,30 @@ export default function ManageAppointments() {
                   <div className="card-actions justify-stretch mt-4 pt-4 border-t border-base-300 gap-2">
                     {apt.status === "BOOKED" && (
                       <button
+                        onClick={() => handleStatusUpdate(apt.id, "CHECKED_IN")}
+                        className="btn btn-info btn-sm font-black flex-1 text-[10px] uppercase"
+                      >
+                        Check In
+                      </button>
+                    )}
+
+                    {apt.status === "CHECKED_IN" && (
+                      <button
                         onClick={() =>
                           handleStatusUpdate(apt.id, "IN_PROGRESS")
                         }
-                        disabled={updating === apt.id}
                         className="btn btn-warning btn-sm font-black flex-1 text-[10px] uppercase"
                       >
-                        {updating === apt.id ? (
-                          <span className="loading loading-spinner loading-xs"></span>
-                        ) : (
-                          "Start Visit"
-                        )}
+                        Start Visit
                       </button>
                     )}
 
                     {apt.status === "IN_PROGRESS" && (
                       <button
                         onClick={() => handleStatusUpdate(apt.id, "COMPLETED")}
-                        disabled={updating === apt.id}
                         className="btn btn-success btn-sm font-black flex-1 text-[10px] uppercase"
                       >
-                        {updating === apt.id ? (
-                          <span className="loading loading-spinner loading-xs"></span>
-                        ) : (
-                          "Complete"
-                        )}
+                        Complete
                       </button>
                     )}
 

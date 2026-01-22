@@ -11,12 +11,19 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateAppointmentRequest {
+
     private Long doctorId;
+
+    private String bookingFor; // SELF | OTHER
+
+    private PatientDetailsDto patientDetails; // Required if OTHER
+
     private LocalDate appointmentDate;
-    private String appointmentTime;
-    private AppointmentType appointmentType;
-    private String bookingFor;
-    private String paymentMode;
-    private PatientDetailsDto patientDetails;
+    private LocalTime appointmentTime;
+
+    private AppointmentType appointmentType; // ONLINE | IN_PERSON
+
+    private String paymentMode; // ONLINE | IN_PERSON
+
     private String notes;
 }

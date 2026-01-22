@@ -1,69 +1,79 @@
 import { api } from "./api";
 
+export interface PatientDetailsPayload {
+  name: string;
+  age: number;
+  gender: string;
+  phone: string;
+}
+
 export interface CreateAppointmentPayload {
   doctorId: number;
-  appointmentDate: string;
-  appointmentTime: string;
+  bookingFor: "SELF" | "OTHER";
+  patientDetails?: PatientDetailsPayload;
+  appointmentDate: string; // YYYY-MM-DD
+  appointmentTime: string; // HH:mm
+  appointmentType: "ONLINE" | "IN_PERSON";
+  paymentMode: "ONLINE" | "IN_PERSON";
   notes?: string;
 }
 
 export interface UpdateAppointmentStatusPayload {
-  status: string;
+  status: "BOOKED" | "CHECKED_IN" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   notes?: string;
 }
 
 export const appointmentService = {
-  async createAppointment(payload: CreateAppointmentPayload) {
-    console.log("AppointmentService: Creating appointment", payload);
-    return await api.post("/appointment/create", payload);
+  // ✅ CREATE
+  createAppointment(payload: CreateAppointmentPayload) {
+    return api.post("/appointment/create", payload);
   },
 
-  async getAppointmentById(id: number) {
-    console.log("AppointmentService: Fetching appointment with id:", id);
-    return await api.get(`/appointment/${id}`);
+  // Get All Appointments by clinic
+  getAllAppointments(clinicId: string) {
+    return api.get(`/appointment/all-clinic?clinicId=${clinicId}`);
   },
 
-  async getPatientAppointments() {
-    console.log("AppointmentService: Fetching patient appointments");
-    return await api.get("/appointment/patient/list");
+  // ✅ PATIENT LIST (THIS WAS MISSING)
+  getPatientAppointments() {
+    return api.get("/appointment/patient/list");
   },
 
-  async getDoctorAppointments() {
-    console.log("AppointmentService: Fetching doctor appointments");
-    return await api.get("/appointment/doctor/list");
+  // ✅ SINGLE APPOINTMENT
+  getAppointmentById(id: number) {
+    return api.get(`/appointment/${id}`);
   },
 
-  async getAllAppointments(id: string) {
-    console.log("AppointmentService: Fetching all appointments");
-    return await api.get(`/appointment/all-clinic?clinicId=${id}`);
-  },
-
-  async updateAppointmentStatus(
-    id: number,
-    payload: UpdateAppointmentStatusPayload,
-  ) {
-    console.log("AppointmentService: Updating appointment status", id, payload);
-    return await api.put(`/appointment/${id}/status`, payload);
-  },
-
-  async cancelAppointment(id: number) {
-    console.log("AppointmentService: Cancelling appointment", id);
-    return await api.delete(`/appointment/${id}`);
-  },
-
-  async addMeetingLink(
+  // Add Meeting Link
+  addMeetingLink(
     appointmentId: number,
     meetingLink: string,
-    meetingPlatform?: string,
+    meetingPlatform: string,
   ) {
-    console.log(
-      "AppointmentService: Adding meeting link for appointment:",
-      appointmentId,
-    );
-    return await api.put(`/appointment/${appointmentId}/meeting-link`, {
+    return api.put(`/appointment/${appointmentId}/meeting-link`, {
       meetingLink,
-      meetingPlatform: meetingPlatform || "GOOGLE_MEET",
+      meetingPlatform,
     });
+  },
+
+  // ✅ DOCTOR DASHBOARD
+  getDoctorAppointments() {
+    return api.get("/appointment/doctor/list");
+  },
+
+  // ✅ CLINIC DASHBOARD
+  getClinicAppointments(clinicId: number) {
+    return api.get(`/appointment/all-clinic?clinicId=${clinicId}`);
+  },
+
+  // ✅ STATUS UPDATE
+  updateAppointmentStatus(id: number, payload: UpdateAppointmentStatusPayload) {
+    return api.put(`/appointment/${id}/status`, payload);
+  },
+
+  // ✅ CANCEL
+  cancelAppointment(id: number) {
+    return api.delete(`/appointment/${id}`);
   },
 };
 

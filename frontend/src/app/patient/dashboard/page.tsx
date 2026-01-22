@@ -18,6 +18,8 @@ import Loading from "@/components/Loading";
 interface AppointmentDto {
   id: number;
   doctorName: string;
+  patientName: string;
+  patientGender: string;
   doctorSpecialization: string;
   appointmentDate: string;
   appointmentTime: string;
@@ -85,9 +87,9 @@ export default function PatientDashboardPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 lg:p-8 space-y-4">
+    <div className="space-y-6">
       {/* --- HEADER SECTION --- */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-10">
         <div className="flex items-center gap-4">
           <div className="avatar placeholder">
             <div className="bg-primary text-primary-content rounded-full w-16 shadow-lg">

@@ -20,6 +20,7 @@ import {
 import Loading from "@/components/Loading";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import CompleteVisitModal from "@/components/CompleteVisitModal";
 
 interface Appointment {
   id: number;
@@ -38,6 +39,10 @@ export default function ManageAppointments() {
   const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [updating, setUpdating] = useState<number | null>(null);
+  const [completeModalOpen, setCompleteModalOpen] = useState(false);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<
+    number | null
+  >(null);
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -62,7 +67,12 @@ export default function ManageAppointments() {
     try {
       setUpdating(appointmentId);
       await appointmentService.updateAppointmentStatus(appointmentId, {
-        status: newStatus,
+        status: newStatus as
+          | "BOOKED"
+          | "CHECKED_IN"
+          | "IN_PROGRESS"
+          | "COMPLETED"
+          | "CANCELLED",
       });
       setAppointments((prev) =>
         prev.map((apt) =>
@@ -281,7 +291,10 @@ export default function ManageAppointments() {
 
                     {apt.status === "IN_PROGRESS" && (
                       <button
-                        onClick={() => handleStatusUpdate(apt.id, "COMPLETED")}
+                        onClick={() => {
+                          setSelectedAppointmentId(apt.id);
+                          setCompleteModalOpen(true);
+                        }}
                         disabled={updating === apt.id}
                         className="btn btn-success btn-sm font-black flex-1 text-[10px] uppercase shadow-sm"
                       >
@@ -317,6 +330,44 @@ export default function ManageAppointments() {
           })}
         </div>
       )}
+      <CompleteVisitModal
+        isOpen={completeModalOpen}
+        onClose={() => {
+          setCompleteModalOpen(false);
+          setSelectedAppointmentId(null);
+        }}
+        onConfirm={async (notes) => {
+          if (!selectedAppointmentId) return;
+
+          try {
+            setUpdating(selectedAppointmentId);
+
+            await appointmentService.updateAppointmentStatus(
+              selectedAppointmentId,
+              {
+                status: "COMPLETED",
+                notes,
+              },
+            );
+
+            setAppointments((prev) =>
+              prev.map((apt) =>
+                apt.id === selectedAppointmentId
+                  ? { ...apt, status: "COMPLETED", notes }
+                  : apt,
+              ),
+            );
+
+            toast.success("Visit completed successfully");
+            setCompleteModalOpen(false);
+            setSelectedAppointmentId(null);
+          } catch {
+            toast.error("Failed to complete visit");
+          } finally {
+            setUpdating(null);
+          }
+        }}
+      />
     </div>
   );
 }

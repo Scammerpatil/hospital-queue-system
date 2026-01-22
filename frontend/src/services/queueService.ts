@@ -15,12 +15,14 @@ export interface QueueStatusResponse {
 }
 
 export interface QueueEntryDto {
+  appointmentId: number;
   queueId: number;
   patientId: number;
   patientName: string;
   patientPhone: string;
   patientAge: string;
   patientGender: string;
+  doctorName: string;
   status: string;
   position: number;
   estimatedWaitMinutes: number;

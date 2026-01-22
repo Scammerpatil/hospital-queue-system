@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @ToString
 public class QueueEntryDto {
-
+    private Long appointmentId;
   private Long queueId;
   private Long patientId;
   private String patientName;

@@ -37,6 +37,7 @@ export default function DoctorQueueManagement() {
       const response = await queueService.getDoctorQueue();
       const data = response.data || response;
       setQueueData(data as DoctorQueueResponse);
+      console.log(data);
       setError(null);
     } catch (err: any) {
       setError(err.message || "Failed to load queue");
@@ -103,7 +104,7 @@ export default function DoctorQueueManagement() {
   if (loading) return <Loading />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-base-200 to-base-300 p-4 lg:p-8">
+    <div className="min-h-screen bg-linear-to-br from-base-200 to-base-300 p-4 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -174,7 +175,7 @@ export default function DoctorQueueManagement() {
 
         {/* Current Patient */}
         {queueData?.currentPatient ? (
-          <div className="card bg-gradient-to-br from-info to-info/80 text-info-content shadow-xl mb-8">
+          <div className="card bg-linear-to-br from-info to-info/80 text-info-content shadow-xl mb-8">
             <div className="card-body">
               <h2 className="card-title text-2xl flex items-center gap-3">
                 <div className="badge badge-lg gap-2 bg-white/20">
@@ -330,10 +331,10 @@ export default function DoctorQueueManagement() {
                       key={patient.queueId}
                       className="flex items-start gap-4 p-3 bg-base-200 rounded-lg hover:bg-base-300 transition"
                     >
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-warning/20 flex items-center justify-center font-bold text-warning">
+                      <div className="shrink-0 w-10 h-10 rounded-full bg-warning/20 flex items-center justify-center font-bold text-warning">
                         #{patient.position}
                       </div>
-                      <div className="flex-grow min-w-0">
+                      <div className="grow min-w-0">
                         <p className="font-bold truncate">
                           {patient.patientName}
                         </p>
@@ -345,7 +346,7 @@ export default function DoctorQueueManagement() {
                           {new Date(patient.checkInTime).toLocaleTimeString()}
                         </p>
                       </div>
-                      <div className="flex-shrink-0 text-right">
+                      <div className="shrink-0 text-right">
                         <p className="text-sm font-bold">
                           {patient.estimatedWaitMinutes} min
                         </p>
@@ -380,10 +381,10 @@ export default function DoctorQueueManagement() {
                       key={patient.queueId}
                       className="flex items-start gap-4 p-3 bg-success/10 rounded-lg"
                     >
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-success/30 flex items-center justify-center text-success">
+                      <div className="shrink-0 w-10 h-10 rounded-full bg-success/30 flex items-center justify-center text-success">
                         <IconCircle size={20} />
                       </div>
-                      <div className="flex-grow min-w-0">
+                      <div className="grow min-w-0">
                         <p className="font-bold truncate">
                           {patient.patientName}
                         </p>

@@ -255,6 +255,7 @@ public class QueueService {
 
   private QueueEntryDto convertToQueueEntryDto(Queue queue) {
     QueueEntryDto dto = new QueueEntryDto();
+    dto.setAppointmentId(queue.getAppointment().getId());
     dto.setQueueId(queue.getId());
     dto.setPatientId(queue.getPatient().getId());
     dto.setPatientName(queue.getPatient().getUser().getName());
@@ -267,7 +268,7 @@ public class QueueService {
     dto.setCheckInTime(queue.getCheckInTime());
     dto.setCalledTime(queue.getCalledTime());
     dto.setAppointmentTime(queue.getAppointment().getAppointmentDate()
-        .atTime(LocalTime.parse(queue.getAppointment().getAppointmentTime())));
+        .atTime(queue.getAppointment().getAppointmentTime()));
     return dto;
   }
 }

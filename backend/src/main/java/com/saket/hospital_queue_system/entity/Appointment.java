@@ -12,67 +12,54 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class Appointment {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  @ManyToOne
-  private Clinic clinic;
+    @ManyToOne(optional = false)
+    private Doctor doctor;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "patient_id", nullable = false)
-  private Patient patient;
+    @ManyToOne(optional = false)
+    private Clinic clinic;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "doctor_id", nullable = false)
-  private Doctor doctor;
+    @ManyToOne(optional = false)
+    private Patient patient;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "booked_by_user_id")
-  private User bookedByUser;
+    @ManyToOne(optional = false)
+    private User bookedByUser; // Logged-in user
 
-  @Column(nullable = false)
-  private LocalDate appointmentDate;
+    private LocalDate appointmentDate;
+    private LocalTime appointmentTime;
 
-  @Column(nullable = false)
-  private String appointmentTime;
+    @Enumerated(EnumType.STRING)
+    private AppointmentType appointmentType;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = true)
-  private AppointmentType appointmentType;
+    @Enumerated(EnumType.STRING)
+    private AppointmentStatus status;
 
-  @Column(length = 20)
-  private String status;
+    private Integer queueNumber;
 
-  @Column(nullable = true)
-  private Integer queueNumber;
+    private String meetingLink;
 
-  @Column(length = 250)
-  private String meetingLink;
+    private String meetingPlatform;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = true)
-  private PaymentStatus paymentStatus;
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
 
-  @Column(length = 250)
-  private String notes;
+    private String notes;
 
-  @Column(name = "created_at", nullable = false, updatable = false)
-  private LocalDateTime createdAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-  @Column(name = "updated_at")
-  private LocalDateTime updatedAt;
+    @PrePersist
+    void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 
-  @PrePersist
-  protected void onCreate() {
-    createdAt = LocalDateTime.now();
-  }
-
-  @PreUpdate
-  protected void onUpdate() {
-    updatedAt = LocalDateTime.now();
-  }
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

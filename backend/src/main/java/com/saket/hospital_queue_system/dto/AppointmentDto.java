@@ -1,5 +1,6 @@
 package com.saket.hospital_queue_system.dto;
 
+import com.saket.hospital_queue_system.entity.AppointmentStatus;
 import lombok.*;
 
 @Getter
@@ -12,6 +13,6 @@ public class AppointmentDto {
   private String patientGender;
   private String appointmentDate;
   private String appointmentTime;
-  private String status;
+  private AppointmentStatus status;
   private String notes;
 }

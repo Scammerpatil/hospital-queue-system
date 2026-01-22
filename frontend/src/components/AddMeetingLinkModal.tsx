@@ -1,6 +1,11 @@
 import React, { useState } from "react";
-import toast from "react-hot-toast";
-import { IconX, IconLoader, IconVideo } from "@tabler/icons-react";
+import toast, { Toaster } from "react-hot-toast";
+import {
+  IconX,
+  IconLoader,
+  IconVideo,
+  IconInfoCircle,
+} from "@tabler/icons-react";
 import { appointmentService } from "@/services/appointmentService";
 
 interface AddMeetingLinkModalProps {
@@ -47,6 +52,7 @@ export default function AddMeetingLinkModal({
 
     try {
       setLoading(true);
+      console.log(appointmentId);
       await appointmentService.addMeetingLink(
         appointmentId,
         meetingLink,
@@ -63,130 +69,140 @@ export default function AddMeetingLinkModal({
         error.message ||
         "Failed to add meeting link";
       toast.error(errorMsg);
-      console.error("Error adding meeting link:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+    <dialog
+      className={`modal ${isOpen ? "modal-open" : ""} modal-bottom sm:modal-middle`}
+    >
+      <Toaster />
+      <div className="modal-box p-0 overflow-hidden border border-base-300 shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <IconVideo size={24} className="text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              Add Meeting Link
-            </h2>
+        <div className="flex items-center justify-between p-6 bg-base-200/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+              <IconVideo size={24} />
+            </div>
+            <h2 className="text-xl font-bold">Add Meeting Link</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="btn btn-sm btn-circle btn-ghost"
+            aria-label="Close"
           >
-            <IconX size={24} />
+            <IconX size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Appointment Details */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Appointment Details Summary */}
           {appointmentDetails && (
-            <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg mb-4">
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                <span className="font-semibold">Patient:</span>{" "}
-                {appointmentDetails.patientName}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                <span className="font-semibold">Doctor:</span>{" "}
-                {appointmentDetails.doctorName}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                <span className="font-semibold">Date & Time:</span>{" "}
-                {appointmentDetails.appointmentDate} at{" "}
-                {appointmentDetails.appointmentTime}
-              </p>
+            <div className="stats stats-vertical w-full bg-base-200 text-sm">
+              <div className="stat py-3">
+                <div className="stat-title uppercase text-[10px] font-bold tracking-wider">
+                  Patient
+                </div>
+                <div className="stat-value text-base font-medium">
+                  {appointmentDetails.patientName}
+                </div>
+              </div>
+              <div className="stat py-3">
+                <div className="stat-title uppercase text-[10px] font-bold tracking-wider">
+                  Schedule
+                </div>
+                <div className="stat-desc text-base-content font-medium opacity-100">
+                  {appointmentDetails.appointmentDate} @{" "}
+                  {appointmentDetails.appointmentTime}
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Platform Selection */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Meeting Platform
-            </label>
-            <select
-              value={meetingPlatform}
-              onChange={(e) => setMeetingPlatform(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="GOOGLE_MEET">Google Meet</option>
-              <option value="ZOOM">Zoom</option>
-              <option value="MICROSOFT_TEAMS">Microsoft Teams</option>
-              <option value="JITSI">Jitsi Meet</option>
-              <option value="OTHER">Other Platform</option>
-            </select>
+          <div className="space-y-4">
+            {/* Platform Selection */}
+            <fieldset className="fieldset">
+              <legend className="fieldset-legend">
+                Meeting Platform <span className="text-error">*</span>
+              </legend>
+              <select
+                value={meetingPlatform}
+                onChange={(e) => setMeetingPlatform(e.target.value)}
+                className="select select-bordered w-full bg-base-100 focus:select-primary"
+              >
+                <option value="GOOGLE_MEET">Google Meet</option>
+                <option value="ZOOM">Zoom</option>
+                <option value="MICROSOFT_TEAMS">Microsoft Teams</option>
+                <option value="JITSI">Jitsi Meet</option>
+                <option value="OTHER">Other Platform</option>
+              </select>
+            </fieldset>
+
+            {/* Meeting Link Input */}
+            <fieldset className="fieldset">
+              <legend className="fieldset-legend">
+                Meeting Link <span className="text-error">*</span>
+              </legend>
+              <input
+                type="url"
+                value={meetingLink}
+                onChange={(e) => setMeetingLink(e.target.value)}
+                placeholder="https://meet.google.com/abc-defg-hij"
+                className="input input-bordered w-full bg-base-100 focus:input-primary"
+                required
+                disabled={loading}
+              />
+              <label className="label">
+                <span className="label-text-alt opacity-60">
+                  Paste the complete meeting URL
+                </span>
+              </label>
+            </fieldset>
           </div>
 
-          {/* Meeting Link Input */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Meeting Link <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="url"
-              value={meetingLink}
-              onChange={(e) => setMeetingLink(e.target.value)}
-              placeholder="https://meet.google.com/abc-defg-hij"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-              disabled={loading}
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Paste the complete meeting link URL
-            </p>
+          {/* Alert Info */}
+          <div className="alert alert-info bg-info/10 border-info/20 text-xs py-3 rounded-xl flex items-start">
+            <IconInfoCircle size={18} className="text-info shrink-0 mt-0.5" />
+            <span>
+              <strong>Note:</strong> The patient will see this link in their
+              dashboard to join the call at the scheduled time.
+            </span>
           </div>
 
-          {/* Information */}
-          <div className="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 p-3 rounded-lg">
-            <p className="text-xs text-yellow-800 dark:text-yellow-200">
-              <span className="font-semibold">ℹ️ Note:</span> The patient will
-              receive this meeting link in their appointment details and will be
-              able to join the video call at the scheduled time.
-            </p>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
+          {/* Action Buttons */}
+          <div className="modal-action mt-0 grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+              className="btn btn-ghost border-base-300"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="btn btn-primary"
             >
               {loading ? (
-                <>
-                  <IconLoader size={18} className="animate-spin" />
-                  Adding...
-                </>
+                <IconLoader className="animate-spin" size={20} />
               ) : (
                 <>
-                  <IconVideo size={18} />
-                  Add Meeting Link
+                  <IconVideo size={20} />
+                  Save Link
                 </>
               )}
             </button>
           </div>
         </form>
       </div>
-    </div>
+      {/* Backdrop click to close */}
+      <form method="dialog" className="modal-backdrop">
+        <button onClick={onClose}>close</button>
+      </form>
+    </dialog>
   );
 }
