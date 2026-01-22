@@ -14,7 +14,7 @@ public class QueueEntryDto {
   private Long patientId;
   private String patientName;
   private String patientPhone;
-  private String patientAge;
+  private Integer patientAge;
   private String patientGender;
   private String status;
   private Integer position;

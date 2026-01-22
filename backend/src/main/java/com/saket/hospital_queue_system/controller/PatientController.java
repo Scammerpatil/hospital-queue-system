@@ -26,7 +26,6 @@ public class PatientController {
     try {
       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
       Object principal = authentication.getPrincipal();
-      System.out.println("PatientController: Authenticated principal: " + principal);
       if (!(principal instanceof UserDetails userDetails)) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
       }

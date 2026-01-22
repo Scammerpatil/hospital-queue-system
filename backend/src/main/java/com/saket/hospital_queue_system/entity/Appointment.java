@@ -19,6 +19,9 @@ public class Appointment {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @ManyToOne
+  private Clinic clinic;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "patient_id", nullable = false)
   private Patient patient;
@@ -28,31 +31,31 @@ public class Appointment {
   private Doctor doctor;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "booked_by_user_id") // Made nullable for backward compatibility
-  private User bookedByUser; // User who booked (may differ from patient)
+  @JoinColumn(name = "booked_by_user_id")
+  private User bookedByUser;
 
   @Column(nullable = false)
   private LocalDate appointmentDate;
 
   @Column(nullable = false)
-  private LocalTime appointmentTime;
+  private String appointmentTime;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = true)
-  private AppointmentType appointmentType; // IN_PERSON or ONLINE
+  private AppointmentType appointmentType;
 
   @Column(length = 20)
-  private String status; // Will be migrated to AppointmentStatus enum in Phase 8
+  private String status;
 
   @Column(nullable = true)
-  private Integer queueNumber; // Assigned queue position
+  private Integer queueNumber;
 
   @Column(length = 250)
-  private String meetingLink; // For online appointments
+  private String meetingLink;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = true)
-  private PaymentStatus paymentStatus; // PENDING, COMPLETED, FAILED, REFUNDED
+  private PaymentStatus paymentStatus;
 
   @Column(length = 250)
   private String notes;

@@ -15,8 +15,10 @@ import {
   IconAlertCircle,
   IconRefresh,
   IconArrowRight,
+  IconVideo,
 } from "@tabler/icons-react";
 import Loading from "@/components/Loading";
+import AddMeetingLinkModal from "@/components/AddMeetingLinkModal";
 
 export default function DoctorQueueManagement() {
   const [queueData, setQueueData] = useState<DoctorQueueResponse | null>(null);
@@ -25,6 +27,10 @@ export default function DoctorQueueManagement() {
   const [calling, setCalling] = useState(false);
   const [completing, setCompleting] = useState<number | null>(null);
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const [meetingLinkModalOpen, setMeetingLinkModalOpen] = useState(false);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<
+    number | null
+  >(null);
 
   const fetchQueue = async () => {
     try {
@@ -200,22 +206,34 @@ export default function DoctorQueueManagement() {
                   <p className="font-bold text-lg flex items-center gap-2 mt-1">
                     <IconClock size={20} />
                     {new Date(
-                      queueData.currentPatient.appointmentTime
+                      queueData.currentPatient.appointmentTime,
                     ).toLocaleTimeString()}
                   </p>
                   <p className="text-sm opacity-75 mt-3">Called At</p>
                   <p className="font-bold">
                     {queueData.currentPatient.calledTime
                       ? new Date(
-                          queueData.currentPatient.calledTime
+                          queueData.currentPatient.calledTime,
                         ).toLocaleTimeString()
                       : "N/A"}
                   </p>
                 </div>
 
                 {/* Action */}
-                <div className="bg-white/10 rounded-lg p-4 flex flex-col justify-center">
-                  <p className="text-sm opacity-75 mb-3">Action</p>
+                <div className="bg-white/10 rounded-lg p-4 flex flex-col justify-center gap-3">
+                  <p className="text-sm opacity-75">Actions</p>
+                  <button
+                    onClick={() => {
+                      setSelectedAppointmentId(
+                        queueData.currentPatient!.appointmentId,
+                      );
+                      setMeetingLinkModalOpen(true);
+                    }}
+                    className="btn btn-info gap-2 text-info-content"
+                  >
+                    <IconVideo size={20} />
+                    Add Meeting Link
+                  </button>
                   <button
                     onClick={() =>
                       handleComplete(queueData.currentPatient!.queueId)
@@ -408,6 +426,33 @@ export default function DoctorQueueManagement() {
           </div>
         )}
       </div>
+
+      {/* Meeting Link Modal */}
+      <AddMeetingLinkModal
+        appointmentId={selectedAppointmentId || 0}
+        appointmentDetails={
+          queueData?.currentPatient
+            ? {
+                patientName: queueData.currentPatient.patientName,
+                doctorName: queueData.currentPatient.doctorName || "Dr. N/A",
+                appointmentDate: new Date(
+                  queueData.currentPatient.appointmentTime,
+                ).toLocaleDateString(),
+                appointmentTime: new Date(
+                  queueData.currentPatient.appointmentTime,
+                ).toLocaleTimeString(),
+              }
+            : undefined
+        }
+        isOpen={meetingLinkModalOpen}
+        onClose={() => {
+          setMeetingLinkModalOpen(false);
+          setSelectedAppointmentId(null);
+        }}
+        onSuccess={() => {
+          fetchQueue(); // Refresh queue after adding meeting link
+        }}
+      />
     </div>
   );
 }

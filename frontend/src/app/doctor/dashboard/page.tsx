@@ -6,8 +6,8 @@ import Link from "next/link";
 
 interface AppointmentDto {
   id: number;
-  doctorName: string;
-  doctorSpecialization: string;
+  patientName: string;
+  patientGender: string;
   appointmentDate: string;
   appointmentTime: string;
   status: string;
@@ -185,7 +185,7 @@ export default function PatientDashboardPage() {
                 {data.licenseNumber}
               </p>
               <p>
-                <span className="font-semibold">Consultation Fee:</span> $
+                <span className="font-semibold">Consultation Fee:</span> ₹
                 {data.consultationFee}
               </p>
               <p>
@@ -233,14 +233,13 @@ export default function PatientDashboardPage() {
                     <th>Time</th>
                     <th>Status</th>
                     <th>Notes</th>
-                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.todayAppointmentsList.map((apt) => (
                     <tr key={apt.id}>
-                      <td className="font-semibold">{apt.doctorName}</td>
-                      <td>{apt.doctorSpecialization}</td>
+                      <td className="font-semibold">{apt.patientName}</td>
+                      <td>{apt.patientGender}</td>
                       <td>{apt.appointmentTime}</td>
                       <td>
                         <div
@@ -248,34 +247,20 @@ export default function PatientDashboardPage() {
                             apt.status === "COMPLETED"
                               ? "badge-success"
                               : apt.status === "BOOKED"
-                              ? "badge-info"
-                              : "badge-warning"
+                                ? "badge-info"
+                                : "badge-warning"
                           }`}
                         >
                           {apt.status}
                         </div>
                       </td>
                       <td className="text-xs">{apt.notes || "-"}</td>
-                      <td>
-                        <Link
-                          href={`/doctor/${apt.id}`}
-                          className="btn btn-xs btn-ghost"
-                        >
-                          View
-                        </Link>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-
-          <div className="card-actions justify-end mt-4">
-            <Link href="/doctor/schedule" className="btn btn-primary">
-              Manage Schedule
-            </Link>
-          </div>
         </div>
       </div>
     </div>

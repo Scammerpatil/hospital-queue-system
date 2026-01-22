@@ -20,11 +20,6 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     icon: <IconHospital size={28} />,
   },
   {
-    title: "Book Appointment",
-    path: "/patient/appointments/book",
-    icon: <IconCalendarPlus size={28} />,
-  },
-  {
     title: "My Appointments",
     path: "/patient/appointments",
     icon: <IconClipboardList size={28} />,

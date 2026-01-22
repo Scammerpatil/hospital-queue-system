@@ -180,7 +180,7 @@ const SideNav = ({ children }: { children: React.ReactNode }) => {
           <div>
             {" "}
             <main
-              className={`overflow-y-auto h-[calc(100vh-5.3rem)] bg-base-100 text-base-content`}
+              className={`overflow-y-auto h-[calc(100vh-5.3rem)] bg-base-100 text-base-content px-4 lg:px-8 py-4`}
             >
               {children}
             </main>

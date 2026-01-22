@@ -21,11 +21,17 @@ public class Patient {
   @JoinColumn(name = "user_id", nullable = false, unique = true)
   private User user;
 
+  @Column(name="patient_name")
+  private String patientName;
+
   @Column(length = 3)
-  private String age;
+  private Integer age;
 
   @Column(length = 20)
-  private String gender; // MALE, FEMALE, OTHER
+  private String gender;
+
+  @Column(length = 15)
+  private String phoneNumber;
 
   @Column(length = 100)
   private String address;

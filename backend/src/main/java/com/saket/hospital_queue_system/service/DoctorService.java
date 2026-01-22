@@ -89,6 +89,11 @@ public class DoctorService {
         return doctorRepository.findByIsAvailableTrue();
     }
 
+    public List<Doctor> getDoctorsForClinic(Long clinicId) {
+        logger.debug("Fetching doctors for clinic ID: {}", clinicId);
+        return doctorRepository.findByClinicId(clinicId);
+    }
+
     public DoctorProfileResponse getDoctorProfile(String email) {
         logger.info("Getting doctor profile for email: {}", email);
 

@@ -22,7 +22,7 @@ public class UpdatePatientProfileRequest {
   private String phone;
 
   @NotBlank(message = "Age cannot be blank")
-  private String age;
+  private Integer age;
 
   @NotBlank(message = "Gender cannot be blank")
   private String gender;

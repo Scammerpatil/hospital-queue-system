@@ -33,14 +33,14 @@ export const appointmentService = {
     return await api.get("/appointment/doctor/list");
   },
 
-  async getAllAppointments() {
+  async getAllAppointments(id: string) {
     console.log("AppointmentService: Fetching all appointments");
-    return await api.get("/appointment/all");
+    return await api.get(`/appointment/all-clinic?clinicId=${id}`);
   },
 
   async updateAppointmentStatus(
     id: number,
-    payload: UpdateAppointmentStatusPayload
+    payload: UpdateAppointmentStatusPayload,
   ) {
     console.log("AppointmentService: Updating appointment status", id, payload);
     return await api.put(`/appointment/${id}/status`, payload);
@@ -49,6 +49,21 @@ export const appointmentService = {
   async cancelAppointment(id: number) {
     console.log("AppointmentService: Cancelling appointment", id);
     return await api.delete(`/appointment/${id}`);
+  },
+
+  async addMeetingLink(
+    appointmentId: number,
+    meetingLink: string,
+    meetingPlatform?: string,
+  ) {
+    console.log(
+      "AppointmentService: Adding meeting link for appointment:",
+      appointmentId,
+    );
+    return await api.put(`/appointment/${appointmentId}/meeting-link`, {
+      meetingLink,
+      meetingPlatform: meetingPlatform || "GOOGLE_MEET",
+    });
   },
 };
 

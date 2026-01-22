@@ -5,9 +5,11 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
 import SideNav from "./SideNav";
+import { useRouter } from "next/navigation";
 
 const Component = ({ children }: { children: React.ReactNode }) => {
   const { setUser } = useAuth();
+  const router = useRouter();
   useEffect(() => {
     const fetchUser = async () => {
       const response = await axios.get("/spring-server/api/auth/me", {
@@ -15,6 +17,8 @@ const Component = ({ children }: { children: React.ReactNode }) => {
       });
       if (response.data) {
         setUser(response.data);
+      } else {
+        router.push("/");
       }
     };
     fetchUser();

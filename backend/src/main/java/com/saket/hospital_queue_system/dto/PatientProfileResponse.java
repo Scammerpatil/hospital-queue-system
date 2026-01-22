@@ -13,7 +13,7 @@ public class PatientProfileResponse {
   private String name;
   private String email;
   private String phone;
-  private String age;
+  private Integer age;
   private String gender;
   private String address;
   private String medicalHistory;

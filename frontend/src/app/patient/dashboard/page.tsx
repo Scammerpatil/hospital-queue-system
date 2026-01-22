@@ -262,10 +262,10 @@ export default function PatientDashboardPage() {
                           </div>
                           <div>
                             <div className="font-bold text-base-content">
-                              {apt.doctorName}
+                              {apt.patientName}
                             </div>
                             <div className="text-xs opacity-50 font-bold uppercase tracking-tighter">
-                              {apt.doctorSpecialization}
+                              {apt.patientGender}
                             </div>
                           </div>
                         </div>
@@ -282,8 +282,8 @@ export default function PatientDashboardPage() {
                             apt.status === "COMPLETED"
                               ? "badge-success bg-success/10 text-success border-success/20"
                               : apt.status === "BOOKED"
-                              ? "badge-info bg-info/10 text-info border-info/20"
-                              : "badge-warning bg-warning/10 text-warning border-warning/20"
+                                ? "badge-info bg-info/10 text-info border-info/20"
+                                : "badge-warning bg-warning/10 text-warning border-warning/20"
                           }`}
                         >
                           {apt.status}

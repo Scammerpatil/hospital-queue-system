@@ -2,16 +2,14 @@ package com.saket.hospital_queue_system.service;
 
 import com.saket.hospital_queue_system.dto.AppointmentResponseDto;
 import com.saket.hospital_queue_system.dto.CreateAppointmentRequest;
+import com.saket.hospital_queue_system.dto.PatientDetailsDto;
 import com.saket.hospital_queue_system.dto.UpdateAppointmentStatusRequest;
-import com.saket.hospital_queue_system.entity.Appointment;
-import com.saket.hospital_queue_system.entity.Doctor;
-import com.saket.hospital_queue_system.entity.Patient;
-import com.saket.hospital_queue_system.entity.User;
-import com.saket.hospital_queue_system.entity.PaymentStatus;
+import com.saket.hospital_queue_system.entity.*;
 import com.saket.hospital_queue_system.repository.AppointmentRepository;
 import com.saket.hospital_queue_system.repository.DoctorRepository;
 import com.saket.hospital_queue_system.repository.PatientRepository;
 import com.saket.hospital_queue_system.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -43,81 +41,80 @@ public class AppointmentService {
   /**
    * Create a new appointment by patient
    */
-  public AppointmentResponseDto createAppointment(String patientEmail, CreateAppointmentRequest request) {
-    logger.info("Creating appointment for patient: {}", patientEmail);
+  @Transactional
+  public AppointmentResponseDto createAppointment(
+          String email,
+          CreateAppointmentRequest request
+  ) {
+        System.out.println("AppointmentService: createAppointment called by " + email);
+      User bookedBy = userRepository.findByEmail(email)
+              .orElseThrow(() -> new RuntimeException("User not found"));
 
-    // Validate patient exists
-    User patientUser = userRepository.findByEmail(patientEmail)
-        .orElseThrow(() -> new RuntimeException("ERROR: User account not found with email: " + patientEmail));
+      if (bookedBy.getRole() != Role.PATIENT) {
+          throw new RuntimeException("Only patients can book appointments");
+      }
 
-    Patient patient = patientRepository.findByUserId(patientUser.getId())
-        .orElseThrow(() -> new RuntimeException("ERROR: Patient profile not initialized for user: " + patientEmail));
+      Doctor doctor = doctorRepository.findById(request.getDoctorId())
+              .orElseThrow(() -> new RuntimeException("Doctor not found"));
 
-    // Validate doctor exists and is available
-    Doctor doctor = doctorRepository.findById(request.getDoctorId())
-        .orElseThrow(() -> new RuntimeException("ERROR: Doctor with ID " + request.getDoctorId() + " not found"));
+      Patient actualPatient;
 
-    if (!doctor.getIsAvailable()) {
-      throw new RuntimeException("ERROR: Doctor " + doctor.getUser().getName() + " (" + doctor.getSpecialization()
-          + ") is currently unavailable for bookings");
-    }
+      if ("SELF".equalsIgnoreCase(request.getBookingFor())) {
 
-    // Validate appointment date is not in the past
-    if (request.getAppointmentDate().isBefore(LocalDate.now())) {
-      throw new RuntimeException(
-          "ERROR: Appointment date cannot be in the past. Selected date: " + request.getAppointmentDate());
-    }
+          actualPatient = patientRepository.findByUserId(bookedBy.getId())
+                  .orElseThrow(() -> new RuntimeException("Patient profile not found"));
 
-    // Check for conflicting appointments
-    List<Appointment> existingAppointments = appointmentRepository
-        .findByDoctorIdAndAppointmentDate(doctor.getId(), request.getAppointmentDate());
+      } else if ("OTHER".equalsIgnoreCase(request.getBookingFor())) {
 
-    boolean conflictExists = existingAppointments.stream()
-        .anyMatch(a -> a.getAppointmentTime().equals(request.getAppointmentTime())
-            && !("CANCELLED".equals(a.getStatus())));
+          PatientDetailsDto details = request.getPatientDetails();
+          if (details == null) {
+              throw new RuntimeException("Patient details required");
+          }
 
-    if (conflictExists) {
-      throw new RuntimeException("ERROR: Dr. " + doctor.getUser().getName() + " is already booked at "
-          + request.getAppointmentTime() + " on " + request.getAppointmentDate() + ". Please choose another time.");
-    }
+          Patient patient = new Patient();
+          patient.setPatientName(details.getName());
+          patient.setAge(details.getAge());
+          patient.setGender(details.getGender());
+          patient.setPhoneNumber(details.getPhone());
+          patient.setIsActive(true);
 
-    // Create appointment
-    Appointment appointment = new Appointment();
-    appointment.setPatient(patient);
-    appointment.setDoctor(doctor);
-    if (patientUser != null) {
-      appointment.setBookedByUser(patientUser);
-    }
-    appointment.setAppointmentDate(request.getAppointmentDate());
-    appointment.setAppointmentTime(request.getAppointmentTime());
-    if (request.getAppointmentType() != null) {
+          actualPatient = patientRepository.save(patient);
+
+      } else {
+          throw new RuntimeException("Invalid bookingFor value");
+      }
+
+      if (request.getAppointmentType() == AppointmentType.ONLINE &&
+              !"ONLINE".equalsIgnoreCase(request.getPaymentMode())) {
+          throw new RuntimeException("Online appointment requires online payment");
+      }
+
+      int queueNumber =
+              appointmentRepository.countActiveAppointmentsForDoctor(
+                      doctor.getId(),
+                      request.getAppointmentDate()
+              ) + 1;
+
+      Appointment appointment = new Appointment();
+      appointment.setDoctor(doctor);
+      appointment.setClinic(doctor.getClinic());
+      appointment.setPatient(actualPatient);
+      appointment.setBookedByUser(bookedBy);
+      appointment.setAppointmentDate(request.getAppointmentDate());
+      appointment.setAppointmentTime(request.getAppointmentTime());
       appointment.setAppointmentType(request.getAppointmentType());
-    }
-    appointment.setStatus("BOOKED");
-    appointment.setQueueNumber(0); // Will be assigned by queue service
-    if (request.getAppointmentType() != null && request.getAppointmentType().name().equals("ONLINE")) {
-      appointment.setPaymentStatus(PaymentStatus.PENDING);
-    } else {
-      appointment.setPaymentStatus(PaymentStatus.PENDING); // Default to PENDING for both
-    }
-    appointment.setNotes(request.getNotes());
+      appointment.setStatus("BOOKED");
 
-    Appointment savedAppointment = appointmentRepository.save(appointment);
-    logger.info("Appointment created with ID: {}", savedAppointment.getId());
+      appointment.setQueueNumber(queueNumber);
+      appointment.setNotes(request.getNotes());
 
-    // Automatically create queue entry for the appointment
-    try {
-      queueService.createQueueEntry(savedAppointment);
-      logger.info("Queue entry created automatically for appointment ID: {}", savedAppointment.getId());
-    } catch (Exception e) {
-      logger.warn("Failed to create queue entry for appointment ID: {}", savedAppointment.getId(), e);
-      // Don't fail the appointment creation if queue creation fails
-    }
+      appointmentRepository.save(appointment);
 
-    return convertToResponseDto(savedAppointment);
+      return AppointmentResponseDto.from(appointment);
   }
 
-  /**
+
+    /**
    * Get appointment by ID
    */
   public AppointmentResponseDto getAppointmentById(Long appointmentId) {
@@ -267,6 +264,60 @@ public class AppointmentService {
   /**
    * Convert Appointment entity to DTO
    */
+  /**
+   * Add or update meeting link for online appointments
+   */
+  public AppointmentResponseDto addMeetingLink(Long appointmentId, String doctorEmail,
+      com.saket.hospital_queue_system.dto.UpdateMeetingLinkRequest request) {
+    logger.info("Adding meeting link for appointment ID: {}", appointmentId);
+
+    Appointment appointment = appointmentRepository.findById(appointmentId)
+        .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+    // Verify only doctor/staff can add meeting links
+    User user = userRepository.findByEmail(doctorEmail)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
+    // Verify appointment is for this doctor or allow staff
+    if (!appointment.getDoctor().getUser().getEmail().equals(doctorEmail) && !user.getRole().equals("STAFF")) {
+      throw new RuntimeException("Only the assigned doctor or staff can add meeting links");
+    }
+
+    // Verify appointment is ONLINE type
+    if (appointment.getAppointmentType() == null || !appointment.getAppointmentType().name().equals("ONLINE")) {
+      throw new RuntimeException("Meeting links can only be added for ONLINE appointments");
+    }
+
+    // Validate meeting link format
+    if (request.getMeetingLink() == null || request.getMeetingLink().trim().isEmpty()) {
+      throw new RuntimeException("Meeting link cannot be empty");
+    }
+
+    // Validate URL format (basic validation)
+    if (!request.getMeetingLink().startsWith("http://") && !request.getMeetingLink().startsWith("https://")) {
+      throw new RuntimeException("Meeting link must be a valid URL");
+    }
+
+    // Update appointment with meeting link
+    appointment.setMeetingLink(request.getMeetingLink());
+    appointment.setUpdatedAt(java.time.LocalDateTime.now());
+
+    Appointment updatedAppointment = appointmentRepository.save(appointment);
+    logger.info("Meeting link added for appointment ID: {}", appointmentId);
+
+    return convertToResponseDto(updatedAppointment);
+  }
+
+    public List<AppointmentResponseDto> getAppointmentsByClinic(Long clinicId) {
+
+        List<Appointment> appointments =
+                appointmentRepository.findByClinicId(clinicId);
+
+        return appointments.stream()
+                .map(AppointmentResponseDto::from)
+                .toList();
+    }
+
   private AppointmentResponseDto convertToResponseDto(Appointment appointment) {
     AppointmentResponseDto dto = new AppointmentResponseDto();
     dto.setId(appointment.getId());

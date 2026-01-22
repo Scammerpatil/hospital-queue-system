@@ -2,6 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { appointmentService } from "@/services/appointmentService";
+import { useAuth } from "@/context/AuthContext";
+import {
+  IconUser,
+  IconCalendar,
+  IconClock,
+  IconStethoscope,
+  IconFilter,
+  IconCircleCheck,
+  IconCircleDashed,
+  IconCircleX,
+  IconPlayerPlay,
+  IconNotes,
+  IconGenderMale,
+  IconGenderFemale,
+  IconSearch,
+} from "@tabler/icons-react";
+import Loading from "@/components/Loading";
+import toast from "react-hot-toast";
 
 interface Appointment {
   id: number;
@@ -16,6 +34,7 @@ interface Appointment {
 }
 
 export default function ManageAppointments() {
+  const { user } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,59 +45,74 @@ export default function ManageAppointments() {
     const fetchAppointments = async () => {
       try {
         setLoading(true);
-        const response = await appointmentService.getAllAppointments();
-        console.log("All appointments fetched:", response);
+        const response = await appointmentService.getAllAppointments(
+          user?.clinicId!,
+        );
         setAppointments(response);
         setError(null);
       } catch (err: any) {
-        console.error("Error fetching appointments:", err);
         setError(err.message || "Failed to load appointments");
       } finally {
         setLoading(false);
       }
     };
-
     fetchAppointments();
-  }, []);
+  }, [user?.clinicId]);
 
   const handleStatusUpdate = async (
     appointmentId: number,
-    newStatus: string
+    newStatus: string,
   ) => {
     try {
       setUpdating(appointmentId);
       await appointmentService.updateAppointmentStatus(appointmentId, {
         status: newStatus,
       });
-      // Update local state
       setAppointments((prev) =>
         prev.map((apt) =>
-          apt.id === appointmentId ? { ...apt, status: newStatus } : apt
-        )
+          apt.id === appointmentId ? { ...apt, status: newStatus } : apt,
+        ),
       );
+      toast.success(`Status updated to ${newStatus.replace("_", " ")}`);
     } catch (err: any) {
-      console.error("Error updating appointment:", err);
-      setError(err.message || "Failed to update appointment");
+      toast.error("Failed to update status");
     } finally {
       setUpdating(null);
     }
   };
 
-  const handleCancel = async (appointmentId: number) => {
-    try {
-      setUpdating(appointmentId);
-      await appointmentService.cancelAppointment(appointmentId);
-      // Update local state
-      setAppointments((prev) =>
-        prev.map((apt) =>
-          apt.id === appointmentId ? { ...apt, status: "CANCELLED" } : apt
-        )
-      );
-    } catch (err: any) {
-      console.error("Error cancelling appointment:", err);
-      setError(err.message || "Failed to cancel appointment");
-    } finally {
-      setUpdating(null);
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case "COMPLETED":
+        return {
+          color: "badge-success",
+          icon: <IconCircleCheck size={14} />,
+          label: "Completed",
+        };
+      case "BOOKED":
+        return {
+          color: "badge-info",
+          icon: <IconCircleDashed size={14} />,
+          label: "Scheduled",
+        };
+      case "IN_PROGRESS":
+        return {
+          color: "badge-warning",
+          icon: <IconPlayerPlay size={14} />,
+          label: "In Progress",
+        };
+      case "CANCELLED":
+        return {
+          color: "badge-error",
+          icon: <IconCircleX size={14} />,
+          label: "Cancelled",
+        };
+      default:
+        return {
+          color: "badge-ghost",
+          icon: <IconCircleDashed size={14} />,
+          label: status,
+        };
     }
   };
 
@@ -87,145 +121,193 @@ export default function ManageAppointments() {
       ? appointments
       : appointments.filter((apt) => apt.status === filterStatus);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
+  if (loading) return <Loading />;
 
   return (
-    <div className="min-h-screen bg-base-100 p-4 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-base-content">
-            All Appointments
+    <div className="max-w-7xl mx-auto p-4 lg:p-8">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight text-base-content uppercase">
+            Clinic <span className="text-primary">Schedule</span>
           </h1>
-          <p className="text-base-content/70 mt-2">
-            Total: {appointments.length} appointments
+          <p className="text-base-content/60 font-bold mt-1 uppercase text-xs tracking-widest">
+            {appointments.length} Total Patient Encounters
           </p>
         </div>
+      </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="alert alert-error mb-8">
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Filter Tabs */}
-        <div className="tabs tabs-bordered mb-6">
+      {/* Filter Toolbar */}
+      <div className="flex flex-wrap items-center gap-3 mb-8">
+        <div className="flex items-center gap-2 mr-2 opacity-50">
+          <IconFilter size={18} />
+          <span className="text-xs font-black uppercase">Filter View</span>
+        </div>
+        <div className="join bg-base-200 p-1 rounded-xl shadow-inner border border-base-300">
           {["ALL", "BOOKED", "IN_PROGRESS", "COMPLETED", "CANCELLED"].map(
             (status) => (
               <button
                 key={status}
-                className={`tab ${filterStatus === status ? "tab-active" : ""}`}
                 onClick={() => setFilterStatus(status)}
+                className={`join-item btn btn-sm border-none px-5 font-black text-[10px] ${
+                  filterStatus === status
+                    ? "btn-primary shadow-md"
+                    : "btn-ghost hover:bg-base-300"
+                }`}
               >
-                {status}
+                {status === "ALL" ? "Everything" : status.replace("_", " ")}
               </button>
-            )
+            ),
           )}
         </div>
-
-        {/* Appointments Table */}
-        {filteredAppointments.length === 0 ? (
-          <div className="alert">
-            <span>
-              No {filterStatus === "ALL" ? "" : filterStatus.toLowerCase()}{" "}
-              appointments found
-            </span>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="table table-zebra w-full">
-              <thead>
-                <tr>
-                  <th>Patient</th>
-                  <th>Doctor</th>
-                  <th>Date</th>
-                  <th>Time</th>
-                  <th>Status</th>
-                  <th>Notes</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAppointments.map((apt) => (
-                  <tr key={apt.id}>
-                    <td className="font-semibold">{apt.patientName}</td>
-                    <td>{apt.doctorName}</td>
-                    <td>{apt.appointmentDate}</td>
-                    <td>{apt.appointmentTime}</td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          apt.status === "COMPLETED"
-                            ? "badge-success"
-                            : apt.status === "BOOKED"
-                            ? "badge-info"
-                            : apt.status === "IN_PROGRESS"
-                            ? "badge-warning"
-                            : "badge-error"
-                        }`}
-                      >
-                        {apt.status}
-                      </span>
-                    </td>
-                    <td className="text-xs">{apt.notes || "-"}</td>
-                    <td>
-                      <div className="flex gap-2">
-                        {apt.status === "BOOKED" && (
-                          <button
-                            className="btn btn-xs btn-warning"
-                            onClick={() =>
-                              handleStatusUpdate(apt.id, "IN_PROGRESS")
-                            }
-                            disabled={updating === apt.id}
-                          >
-                            {updating === apt.id ? (
-                              <span className="loading loading-spinner loading-xs"></span>
-                            ) : (
-                              "Start"
-                            )}
-                          </button>
-                        )}
-                        {apt.status === "IN_PROGRESS" && (
-                          <button
-                            className="btn btn-xs btn-success"
-                            onClick={() =>
-                              handleStatusUpdate(apt.id, "COMPLETED")
-                            }
-                            disabled={updating === apt.id}
-                          >
-                            {updating === apt.id ? (
-                              <span className="loading loading-spinner loading-xs"></span>
-                            ) : (
-                              "Complete"
-                            )}
-                          </button>
-                        )}
-                        {(apt.status === "BOOKED" ||
-                          apt.status === "IN_PROGRESS") && (
-                          <button
-                            className="btn btn-xs btn-error"
-                            onClick={() => handleCancel(apt.id)}
-                            disabled={updating === apt.id}
-                          >
-                            Cancel
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="alert alert-error shadow-lg mb-8 rounded-2xl border-2 border-error/20">
+          <IconCircleX stroke={3} />
+          <span className="font-black uppercase text-xs">{error}</span>
+        </div>
+      )}
+
+      {/* Main Grid */}
+      {filteredAppointments.length === 0 ? (
+        <div className="hero bg-base-200 rounded-3xl py-24 border-2 border-dashed border-base-300">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <IconSearch size={48} className="mx-auto mb-4 opacity-20" />
+              <h2 className="text-xl font-black opacity-40 uppercase tracking-widest">
+                No matching records
+              </h2>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredAppointments.map((apt) => {
+            const config = getStatusConfig(apt.status);
+            return (
+              <div
+                key={apt.id}
+                className="group card bg-base-200 border border-base-300 hover:border-primary/40 transition-all duration-300"
+              >
+                <div className="card-body p-6">
+                  {/* Patient Info */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex gap-4">
+                      <div className="avatar placeholder">
+                        <div className="bg-base-300 text-base-content rounded-xl w-12 border border-base-content/10 flex justify-center items-center">
+                          <IconUser size={24} />
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-black text-lg group-hover:text-primary transition-colors">
+                          {apt.patientName}
+                        </h3>
+                        <div className="flex items-center gap-1 opacity-50">
+                          {apt.patientGender === "MALE" ? (
+                            <IconGenderMale size={14} />
+                          ) : (
+                            <IconGenderFemale size={14} />
+                          )}
+                          <p className="text-[10px] font-black uppercase tracking-tighter">
+                            {apt.patientGender}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className={`badge ${config.color} gap-1.5 font-black py-3 px-3 text-[10px] uppercase`}
+                    >
+                      {config.icon}
+                      {config.label}
+                    </div>
+                  </div>
+
+                  {/* Schedule Details */}
+                  <div className="bg-base-100/50 rounded-2xl p-4 space-y-3 border border-base-300">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="flex items-center gap-2 opacity-40 font-black text-[10px] uppercase">
+                        <IconCalendar size={14} /> Date
+                      </span>
+                      <span className="font-bold text-xs">
+                        {apt.appointmentDate}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="flex items-center gap-2 opacity-40 font-black text-[10px] uppercase">
+                        <IconClock size={14} /> Slot
+                      </span>
+                      <span className="font-bold text-xs">
+                        {apt.appointmentTime}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  <div className="flex gap-2 min-h-[40px]">
+                    <IconNotes size={14} className="mt-1 opacity-30 shrink-0" />
+                    <p className="text-[11px] opacity-60 font-medium italic line-clamp-2 leading-relaxed">
+                      {apt.notes || "No clinical notes provided by patient."}
+                    </p>
+                  </div>
+
+                  {/* Admin Actions */}
+                  <div className="card-actions justify-stretch mt-4 pt-4 border-t border-base-300 gap-2">
+                    {apt.status === "BOOKED" && (
+                      <button
+                        onClick={() =>
+                          handleStatusUpdate(apt.id, "IN_PROGRESS")
+                        }
+                        disabled={updating === apt.id}
+                        className="btn btn-warning btn-sm font-black flex-1 text-[10px] uppercase"
+                      >
+                        {updating === apt.id ? (
+                          <span className="loading loading-spinner loading-xs"></span>
+                        ) : (
+                          "Start Visit"
+                        )}
+                      </button>
+                    )}
+
+                    {apt.status === "IN_PROGRESS" && (
+                      <button
+                        onClick={() => handleStatusUpdate(apt.id, "COMPLETED")}
+                        disabled={updating === apt.id}
+                        className="btn btn-success btn-sm font-black flex-1 text-[10px] uppercase"
+                      >
+                        {updating === apt.id ? (
+                          <span className="loading loading-spinner loading-xs"></span>
+                        ) : (
+                          "Complete"
+                        )}
+                      </button>
+                    )}
+
+                    {(apt.status === "BOOKED" ||
+                      apt.status === "IN_PROGRESS") && (
+                      <button
+                        onClick={() => handleStatusUpdate(apt.id, "CANCELLED")}
+                        disabled={updating === apt.id}
+                        className="btn btn-ghost btn-outline btn-sm font-black text-[10px] uppercase hover:btn-error"
+                      >
+                        Cancel
+                      </button>
+                    )}
+
+                    {(apt.status === "COMPLETED" ||
+                      apt.status === "CANCELLED") && (
+                      <button className="btn btn-disabled btn-sm font-black flex-1 text-[10px] uppercase">
+                        Closed Case
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

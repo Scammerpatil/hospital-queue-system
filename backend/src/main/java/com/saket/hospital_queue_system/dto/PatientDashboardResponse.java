@@ -10,7 +10,7 @@ import java.util.List;
 public class PatientDashboardResponse {
   private String patientName;
   private String email;
-  private String age;
+  private Integer age;
   private String gender;
   private String address;
   private String profileImage;

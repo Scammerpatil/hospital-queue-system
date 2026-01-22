@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -266,7 +267,7 @@ public class QueueService {
     dto.setCheckInTime(queue.getCheckInTime());
     dto.setCalledTime(queue.getCalledTime());
     dto.setAppointmentTime(queue.getAppointment().getAppointmentDate()
-        .atTime(queue.getAppointment().getAppointmentTime()));
+        .atTime(LocalTime.parse(queue.getAppointment().getAppointmentTime())));
     return dto;
   }
 }

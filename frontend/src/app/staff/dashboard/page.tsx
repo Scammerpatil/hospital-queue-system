@@ -6,8 +6,7 @@ import Link from "next/link";
 
 interface AppointmentDto {
   id: number;
-  doctorName: string;
-  doctorSpecialization: string;
+  patientName: string;
   appointmentDate: string;
   appointmentTime: string;
   status: string;
@@ -259,7 +258,6 @@ export default function StaffDashboardPage() {
                 <thead>
                   <tr>
                     <th>Patient</th>
-                    <th>Doctor</th>
                     <th>Time</th>
                     <th>Status</th>
                     <th>Notes</th>
@@ -268,8 +266,7 @@ export default function StaffDashboardPage() {
                 <tbody>
                   {data.recentAppointments.map((apt) => (
                     <tr key={apt.id}>
-                      <td className="font-semibold">{apt.doctorName}</td>
-                      <td>{apt.doctorSpecialization}</td>
+                      <td className="font-semibold">{apt.patientName}</td>
                       <td>{apt.appointmentTime}</td>
                       <td>
                         <div
@@ -277,8 +274,8 @@ export default function StaffDashboardPage() {
                             apt.status === "COMPLETED"
                               ? "badge-success"
                               : apt.status === "BOOKED"
-                              ? "badge-info"
-                              : "badge-warning"
+                                ? "badge-info"
+                                : "badge-warning"
                           }`}
                         >
                           {apt.status}

@@ -6,15 +6,17 @@ import { queueService, QueueStatusResponse } from "@/services/queueService";
 import {
   IconClipboardList,
   IconClock,
-  IconUser,
   IconStethoscope,
   IconMapPin,
   IconAlertCircle,
-  IconCircle,
+  IconCircleCheck,
   IconHourglass,
   IconRefresh,
+  IconPlayerPlay,
+  IconCircleX,
 } from "@tabler/icons-react";
 import Loading from "@/components/Loading";
+import toast from "react-hot-toast";
 
 interface Appointment {
   id: number;
@@ -28,7 +30,7 @@ interface Appointment {
 
 export default function PatientQueueStatus() {
   const [queueStatus, setQueueStatus] = useState<QueueStatusResponse | null>(
-    null
+    null,
   );
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +38,6 @@ export default function PatientQueueStatus() {
   const [checkingIn, setCheckingIn] = useState(false);
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
 
-  // Fetch appointments
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
@@ -48,7 +49,7 @@ export default function PatientQueueStatus() {
         const todaysAppointment = (appointments as Appointment[]).find(
           (apt) =>
             (apt.appointmentDate === today && apt.status === "BOOKED") ||
-            "IN_PROGRESS"
+            apt.status === "IN_PROGRESS",
         );
 
         if (todaysAppointment) {
@@ -57,340 +58,288 @@ export default function PatientQueueStatus() {
           setError("No appointment scheduled for today");
         }
       } catch (err: any) {
-        setError(err.message || "Failed to load appointments");
-        console.error("Error fetching appointments:", err);
+        setError("Failed to load today's schedule");
       } finally {
         setLoading(false);
       }
     };
-
     fetchAppointments();
   }, []);
 
-  // Fetch queue status
   const fetchQueueStatus = async () => {
     if (!appointment) return;
-
     try {
       const response = await queueService.getMyQueueStatus();
-      const data = response.data || response;
-      setQueueStatus(data as QueueStatusResponse);
-      setError(null);
-    } catch (err: any) {
-      // Queue status might not exist until check-in
-      console.log("Queue status not available yet");
+      setQueueStatus(response.data || response);
+    } catch (err) {
+      console.log("Queue not joined yet");
     }
   };
 
   useEffect(() => {
-    if (appointment) {
-      fetchQueueStatus();
-    }
+    if (appointment) fetchQueueStatus();
   }, [appointment]);
 
-  // Auto-refresh queue status
   useEffect(() => {
-    if (!autoRefreshEnabled || !appointment) return;
-
-    const interval = setInterval(() => {
-      fetchQueueStatus();
-    }, 30000); // Refresh every 30 seconds
-
+    if (!autoRefreshEnabled || !appointment || !queueStatus) return;
+    const interval = setInterval(fetchQueueStatus, 30000);
     return () => clearInterval(interval);
-  }, [autoRefreshEnabled, appointment]);
+  }, [autoRefreshEnabled, appointment, queueStatus]);
 
   const handleCheckIn = async () => {
-    if (!appointment) {
-      setError("No appointment found");
-      return;
-    }
-
+    if (!appointment) return;
     try {
       setCheckingIn(true);
       const response = await queueService.checkIn(appointment.id);
-      const data = response.data || response;
-      setQueueStatus(data as QueueStatusResponse);
-      setError(null);
-      // Start auto-refresh after check-in
-      setAutoRefreshEnabled(true);
+      setQueueStatus(response.data || response);
+      toast.success("Checked in successfully!");
     } catch (err: any) {
-      setError(err.message || "Failed to check in");
-      console.error("Error checking in:", err);
+      toast.error(err.message || "Check-in failed");
     } finally {
       setCheckingIn(false);
     }
   };
 
-  const handleRefresh = async () => {
-    await fetchQueueStatus();
-  };
-
-  const getStatusColor = (status: string) => {
+  const getStatusConfig = (status: string) => {
     switch (status) {
       case "WAITING":
-        return "badge-warning";
+        return {
+          color: "badge-warning",
+          icon: <IconHourglass size={14} />,
+          label: "Waiting",
+        };
       case "IN_PROGRESS":
-        return "badge-info";
+        return {
+          color: "badge-info",
+          icon: <IconPlayerPlay size={14} />,
+          label: "In Progress",
+        };
       case "COMPLETED":
-        return "badge-success";
-      case "CANCELLED":
-        return "badge-error";
+        return {
+          color: "badge-success",
+          icon: <IconCircleCheck size={14} />,
+          label: "Completed",
+        };
       default:
-        return "badge-ghost";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "WAITING":
-        return <IconHourglass size={20} />;
-      case "IN_PROGRESS":
-        return <IconClipboardList size={20} />;
-      case "COMPLETED":
-        return <IconCircle size={20} />;
-      case "CANCELLED":
-        return <IconAlertCircle size={20} />;
-      default:
-        return null;
+        return {
+          color: "badge-ghost",
+          icon: <IconAlertCircle size={14} />,
+          label: status,
+        };
     }
   };
 
   if (loading) return <Loading />;
 
   return (
-    <div className="max-w-7xl mx-auto p-4 lg:p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-black tracking-tight">Queue Status</h1>
-            <p className="text-base-content/60 mt-2">
-              Monitor your position and estimated wait time
-            </p>
-          </div>
-          <button
-            onClick={handleRefresh}
-            className="btn btn-circle btn-outline"
-            title="Refresh queue status"
-          >
-            <IconRefresh size={24} />
-          </button>
+    <>
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight text-base-content">
+            Live <span className="text-primary">Queue</span> Status
+          </h1>
+          <p className="text-base-content/60 font-medium mt-1">
+            Monitor your real-time position in the clinic
+          </p>
         </div>
+        <button
+          onClick={fetchQueueStatus}
+          className="btn btn-circle btn-ghost bg-base-200 border border-base-300"
+        >
+          <IconRefresh size={24} stroke={3} />
+        </button>
+      </div>
 
-        {/* Error Message */}
-        {error && !queueStatus && appointment && (
-          <div className="alert alert-warning mb-6" role="alert">
-            <IconAlertCircle />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Appointment Card */}
-        {appointment && (
-          <div className="card bg-base-100 shadow-xl mb-6">
-            <div className="card-body">
-              <h2 className="card-title flex items-center gap-2">
-                <IconMapPin size={24} className="text-primary" />
-                Your Appointment
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                {/* Doctor Info */}
-                <div className="flex gap-4">
-                  <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <IconStethoscope size={32} className="text-primary" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Appointment Info */}
+        <div className="lg:col-span-5 space-y-6">
+          {appointment ? (
+            <div className="card bg-base-200 border border-base-300">
+              <div className="card-body p-8">
+                <div className="flex gap-4 mb-6">
+                  <div className="avatar placeholder">
+                    <div className="bg-primary/10 text-primary rounded-xl w-14 border border-primary/20 flex justify-center items-center">
+                      <IconStethoscope size={28} />
+                    </div>
                   </div>
                   <div>
-                    <p className="text-sm opacity-60">Doctor</p>
-                    <p className="font-bold text-lg">
+                    <h3 className="font-black text-xl leading-tight">
                       {appointment.doctorName}
-                    </p>
-                    <p className="text-sm opacity-60">
+                    </h3>
+                    <p className="text-xs font-bold opacity-50 uppercase tracking-tighter">
                       {appointment.doctorSpecialization}
                     </p>
                   </div>
                 </div>
 
-                {/* Date & Time */}
-                <div>
-                  <p className="text-sm opacity-60">Scheduled Time</p>
-                  <p className="font-bold text-lg flex items-center gap-2">
-                    <IconClock size={20} />
-                    {appointment.appointmentTime}
-                  </p>
-                  <p className="text-sm opacity-60 mt-2">
-                    {appointment.appointmentDate}
-                  </p>
+                <div className="bg-base-100/50 rounded-2xl p-5 space-y-4 border border-base-300">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="flex items-center gap-2 opacity-60 font-bold uppercase text-[10px] tracking-widest">
+                      <IconClock size={16} /> Scheduled
+                    </span>
+                    <span className="font-black">
+                      {appointment.appointmentTime}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="flex items-center gap-2 opacity-60 font-bold uppercase text-[10px] tracking-widest">
+                      <IconMapPin size={16} /> Date
+                    </span>
+                    <span className="font-black">
+                      {appointment.appointmentDate}
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Check-in Button */}
-              {!queueStatus && (
-                <button
-                  onClick={handleCheckIn}
-                  disabled={checkingIn}
-                  className="btn btn-primary mt-4 gap-2"
-                >
-                  {checkingIn ? (
-                    <>
+                {!queueStatus && (
+                  <button
+                    onClick={handleCheckIn}
+                    disabled={checkingIn}
+                    className="btn btn-primary btn-block mt-6 shadow-lg shadow-primary/20 font-black"
+                  >
+                    {checkingIn ? (
                       <span className="loading loading-spinner"></span>
-                      Checking In...
-                    </>
-                  ) : (
-                    <>
-                      <IconCircle size={20} />
-                      Check In
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Queue Status Card */}
-        {queueStatus && (
-          <div className="card bg-gradient-to-br from-primary to-primary/80 text-primary-content shadow-xl">
-            <div className="card-body">
-              <div className="flex justify-between items-start mb-6">
-                <h2 className="card-title text-2xl">Queue Status</h2>
-                <div
-                  className={`badge badge-lg gap-2 ${getStatusColor(
-                    queueStatus.status
-                  )}`}
-                >
-                  {getStatusIcon(queueStatus.status)}
-                  {queueStatus.status}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Position */}
-                <div className="stat bg-white/10 rounded-lg p-4">
-                  <div className="stat-title text-white/70">Your Position</div>
-                  <div className="stat-value text-3xl font-black text-white">
-                    #{queueStatus.position}
-                  </div>
-                  <div className="stat-desc text-white/60 mt-2">in queue</div>
-                </div>
-
-                {/* Estimated Wait */}
-                <div className="stat bg-white/10 rounded-lg p-4">
-                  <div className="stat-title text-white/70">Estimated Wait</div>
-                  <div className="stat-value text-3xl font-black text-white">
-                    {queueStatus.estimatedWaitMinutes}
-                  </div>
-                  <div className="stat-desc text-white/60 mt-2">minutes</div>
-                </div>
-
-                {/* Status Detail */}
-                <div className="stat bg-white/10 rounded-lg p-4">
-                  <div className="stat-title text-white/70">Check-in Time</div>
-                  <div className="stat-value text-lg font-bold text-white">
-                    {new Date(queueStatus.checkInTime).toLocaleTimeString()}
-                  </div>
-                  <div className="stat-desc text-white/60 mt-2">
-                    {queueStatus.calledTime
-                      ? `Called at ${new Date(
-                          queueStatus.calledTime
-                        ).toLocaleTimeString()}`
-                      : "Waiting..."}
-                  </div>
-                </div>
-              </div>
-
-              {/* Auto-refresh Toggle */}
-              <div className="mt-6 flex items-center gap-4 justify-between">
-                <label className="label cursor-pointer gap-3">
-                  <input
-                    type="checkbox"
-                    checked={autoRefreshEnabled}
-                    onChange={(e) => setAutoRefreshEnabled(e.target.checked)}
-                    className="checkbox checkbox-white"
-                  />
-                  <span className="text-white">Auto-refresh (every 30s)</span>
-                </label>
-                <button
-                  onClick={handleRefresh}
-                  className="btn btn-sm btn-ghost text-white hover:bg-white/20 gap-2"
-                >
-                  <IconRefresh size={16} />
-                  Refresh Now
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Status Timeline */}
-        {queueStatus && (
-          <div className="card bg-base-100 shadow-xl mt-6">
-            <div className="card-body">
-              <h3 className="card-title mb-4">Timeline</h3>
-              <div className="timeline timeline-vertical">
-                {/* Check-in */}
-                <div className="timeline-item">
-                  <div className="timeline-marker bg-success text-white">
-                    <IconCircle size={20} />
-                  </div>
-                  <div className="timeline-start md:text-end mb-10">
-                    <div className="text-lg font-bold">Checked In</div>
-                    <time className="font-mono text-sm opacity-60">
-                      {new Date(queueStatus.checkInTime).toLocaleTimeString()}
-                    </time>
-                  </div>
-                </div>
-
-                {/* Called */}
-                {queueStatus.calledTime && (
-                  <div className="timeline-item">
-                    <div className="timeline-marker bg-info text-white">
-                      <IconClipboardList size={20} />
-                    </div>
-                    <div className="timeline-end mb-10">
-                      <div className="text-lg font-bold">Doctor Called</div>
-                      <time className="font-mono text-sm opacity-60">
-                        {new Date(queueStatus.calledTime).toLocaleTimeString()}
-                      </time>
-                    </div>
-                  </div>
-                )}
-
-                {/* Completed */}
-                {queueStatus.completedTime && (
-                  <div className="timeline-item">
-                    <div className="timeline-marker bg-success text-white">
-                      <IconCircle size={20} />
-                    </div>
-                    <div className="timeline-start md:text-end">
-                      <div className="text-lg font-bold">Completed</div>
-                      <time className="font-mono text-sm opacity-60">
-                        {new Date(
-                          queueStatus.completedTime
-                        ).toLocaleTimeString()}
-                      </time>
-                    </div>
-                  </div>
+                    ) : (
+                      "Confirm Check-In"
+                    )}
+                  </button>
                 )}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* No Queue Status Message */}
-        {!queueStatus && appointment && !checkingIn && !error && (
-          <div className="alert">
-            <IconAlertCircle />
-            <div>
-              <p className="font-bold">Ready to check in?</p>
-              <p className="text-sm">
-                Click the "Check In" button above to join the queue for your
-                appointment.
+          ) : (
+            <div className="card bg-base-200 border-2 border-dashed border-base-300 p-10 text-center">
+              <IconCircleX size={48} className="mx-auto mb-4 opacity-20" />
+              <p className="font-black opacity-40 uppercase tracking-widest">
+                No Active Appointment
               </p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* Right Column: Queue & Stats */}
+        <div className="lg:col-span-7 space-y-6">
+          {queueStatus ? (
+            <>
+              {/* Live Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="card bg-primary text-primary-content p-6 flex flex-row items-center justify-between border-b-4 border-primary-focus">
+                  <div>
+                    <p className="text-[10px] font-black uppercase opacity-80 tracking-widest">
+                      Your Position
+                    </p>
+                    <p className="text-5xl font-black">
+                      #{queueStatus.position}
+                    </p>
+                  </div>
+                  <IconClipboardList size={48} className="opacity-20" />
+                </div>
+                <div className="card bg-base-200 border border-base-300 p-6 flex flex-row items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase opacity-40 tracking-widest">
+                      Est. Wait Time
+                    </p>
+                    <p className="text-5xl font-black text-primary">
+                      {queueStatus.estimatedWaitMinutes}
+                      <span className="text-sm">m</span>
+                    </p>
+                  </div>
+                  <IconClock size={48} className="opacity-10" />
+                </div>
+              </div>
+
+              {/* Status & Timeline */}
+              <div className="card bg-base-200 border border-base-300">
+                <div className="card-body p-8">
+                  <div className="flex justify-between items-center mb-8">
+                    <h3 className="font-black text-lg uppercase tracking-widest opacity-40 text-[12px]">
+                      Service Journey
+                    </h3>
+                    <div
+                      className={`badge ${getStatusConfig(queueStatus.status).color} gap-1.5 font-black py-3 px-4`}
+                    >
+                      {getStatusConfig(queueStatus.status).icon}
+                      {getStatusConfig(queueStatus.status).label}
+                    </div>
+                  </div>
+
+                  <ul className="steps steps-vertical w-full">
+                    <li
+                      className="step step-primary font-black text-sm"
+                      data-content="✓"
+                    >
+                      <div className="flex flex-col items-start ml-4">
+                        <span>Checked In</span>
+                        <span className="text-[10px] opacity-40">
+                          {new Date(
+                            queueStatus.checkInTime,
+                          ).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </li>
+                    <li
+                      className={`step ${queueStatus.calledTime ? "step-primary" : ""} font-black text-sm`}
+                      data-content={queueStatus.calledTime ? "✓" : "2"}
+                    >
+                      <div className="flex flex-col items-start ml-4">
+                        <span>Doctor Called</span>
+                        {queueStatus.calledTime && (
+                          <span className="text-[10px] opacity-40">
+                            {new Date(
+                              queueStatus.calledTime,
+                            ).toLocaleTimeString()}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                    <li
+                      className={`step ${queueStatus.completedTime ? "step-primary" : ""} font-black text-sm`}
+                      data-content={queueStatus.completedTime ? "✓" : "3"}
+                    >
+                      <div className="flex flex-col items-start ml-4">
+                        <span>Consultation Complete</span>
+                      </div>
+                    </li>
+                  </ul>
+
+                  <div className="mt-8 pt-6 border-t border-base-300 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="toggle toggle-primary toggle-sm"
+                        checked={autoRefreshEnabled}
+                        onChange={(e) =>
+                          setAutoRefreshEnabled(e.target.checked)
+                        }
+                      />
+                      <span className="text-[10px] font-black uppercase opacity-40">
+                        Auto-Refresh Live
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-black opacity-30 italic">
+                      Last updated: Just now
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="card bg-base-200 border-2 border-dashed border-base-300 p-20 text-center">
+              <IconHourglass
+                size={60}
+                className="mx-auto mb-6 opacity-10 animate-pulse"
+              />
+              <h3 className="text-xl font-black opacity-40">
+                Waiting for Check-in
+              </h3>
+              <p className="max-w-xs mx-auto mt-2 text-sm opacity-50 font-medium">
+                Join the queue to see your live position and get an estimated
+                arrival time for the doctor.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

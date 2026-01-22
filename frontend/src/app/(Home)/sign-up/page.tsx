@@ -5,7 +5,6 @@ import {
   IconUser,
   IconLock,
   IconMail,
-  IconStethoscope,
   IconUsers,
   IconUserCircle,
   IconArrowNarrowRightDashed,
@@ -13,18 +12,22 @@ import {
   IconEyeOff,
   IconPhone,
   IconUserPlus,
+  IconBuildingHospital,
+  IconMapPin,
+  IconHospital,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState } from "react";
 import axios, { AxiosResponse } from "axios";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { authService } from "@/services/authService";
 
 export default function SignUpPage() {
   const router = useRouter();
+
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -33,9 +36,12 @@ export default function SignUpPage() {
     confirmPassword: "",
     profileImage: "",
     otp: "",
-    role: "PATIENT" as "PATIENT" | "DOCTOR" | "STAFF",
-    specialization: "",
-    department: "",
+    role: "PATIENT" as "PATIENT" | "STAFF",
+    clinicName: "",
+    clinicDistrict: "",
+    clinicTaluka: "",
+    clinicState: "",
+    clinicAddress: "",
   });
 
   const [image, setImage] = useState<File | null>(null);
@@ -44,40 +50,6 @@ export default function SignUpPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const verifyEmail = async () => {
-    if (!form.email || !form.email.includes("@") || !form.email.includes(".")) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
-    if (!form.name) {
-      toast.error("Please enter your name first");
-      return;
-    }
-    try {
-      const response = axios.post(`/api/helper/verify-email`, {
-        name: form.name,
-        email: form.email,
-      });
-      toast.promise(response, {
-        loading: "Sending Email...",
-        success: (data: AxiosResponse) => {
-          (
-            document.getElementById("otpContainer") as HTMLDialogElement
-          ).showModal();
-          setOtpSent(data.data.token);
-          return "Email Sent!!";
-        },
-        error: (err) => {
-          console.log(err);
-          return err.data?.response.message || "Something went wrong";
-        },
-      });
-    } catch (error) {
-      console.log(error);
-      toast.error("Something went wrong!!!");
-    }
   };
 
   const uploadImage = (folderName: string, imageName: string, path: string) => {
@@ -102,10 +74,7 @@ export default function SignUpPage() {
       toast.promise(imageResponse, {
         loading: "Uploading Image...",
         success: (data: AxiosResponse) => {
-          setForm({
-            ...form,
-            profileImage: data.data.path,
-          });
+          setForm({ ...form, profileImage: data.data.path });
           return "Image Uploaded Successfully";
         },
         error: (err: unknown) => `This just happened: ${err}`,
@@ -113,19 +82,40 @@ export default function SignUpPage() {
     }
   };
 
+  const verifyEmail = async () => {
+    if (!form.email || !form.email.includes("@")) {
+      toast.error("Enter valid email");
+      return;
+    }
+
+    const req = axios.post("/api/helper/verify-email", {
+      name: form.name,
+      email: form.email,
+    });
+
+    toast.promise(req, {
+      loading: "Sending OTP...",
+      success: (res) => {
+        setOtpSent(res.data.token);
+        (
+          document.getElementById("otpContainer") as HTMLDialogElement
+        ).showModal();
+        return "OTP sent successfully";
+      },
+      error: "Failed to send OTP",
+    });
+  };
+
   const handleRegister = async () => {
-    const {
-      name,
-      email,
-      phone,
-      profileImage,
-      password,
-      confirmPassword,
-      role,
-    } = form;
+    if (!isEmailVerified) {
+      toast.error("Please verify email first");
+      return;
+    }
+
+    const { name, email, phone, password, confirmPassword, role } = form;
 
     if (!name || !email || !phone || !password) {
-      toast.error("Please fill in all required fields");
+      toast.error("All fields are required");
       return;
     }
 
@@ -134,40 +124,56 @@ export default function SignUpPage() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
+    if (role === "STAFF") {
+      const {
+        clinicName,
+        clinicDistrict,
+        clinicTaluka,
+        clinicState,
+        clinicAddress,
+      } = form;
+
+      if (
+        !clinicName ||
+        !clinicDistrict ||
+        !clinicTaluka ||
+        !clinicState ||
+        !clinicAddress
+      ) {
+        toast.error("Please fill all clinic details");
+        return;
+      }
     }
 
     setIsLoading(true);
+
     try {
-      const signupData: Parameters<typeof authService.signup>[0] = {
-        fullName: name,
-        email,
-        phone,
-        profileImage,
-        password,
-        role,
+      const payload: any = {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+        profileImage: form.profileImage,
+        role: form.role,
       };
 
-      // Add role-specific fields
-      if (role === "DOCTOR" && form.specialization) {
-        signupData.specialization = form.specialization;
-      } else if (role === "STAFF" && form.department) {
-        signupData.department = form.department;
+      // ✅ Attach clinic only for STAFF
+      if (form.role === "STAFF") {
+        payload.clinic = {
+          name: form.clinicName,
+          district: form.clinicDistrict,
+          taluka: form.clinicTaluka,
+          state: form.clinicState,
+          address: form.clinicAddress,
+        };
       }
 
-      const response = await authService.signup(signupData);
+      await axios.post("/spring-server/api/auth/signup", payload);
 
-      if (response) {
-        toast.success(`Account created successfully as a ${form.role}!`);
-        router.push("/login");
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Signup failed";
-      toast.error(errorMessage);
-      console.error("Signup error:", error);
+      toast.success("Account created successfully");
+      router.push("/login");
+    } catch (err: any) {
+      toast.error(err?.response.data || "Signup failed");
     } finally {
       setIsLoading(false);
     }
@@ -175,56 +181,44 @@ export default function SignUpPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-base-200 flex items-center justify-center p-6 relative overflow-hidden">
-        {/* Background Glow */}
-        <div className="absolute top-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
-
+      <div className="min-h-screen bg-base-200 flex items-center justify-center p-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="card bg-base-100 shadow-2xl w-full max-w-lg z-10 border border-base-content/5"
         >
-          <div className="card-body p-8 lg:px-10 lg:py-8">
-            {/* Header */}
-            <div className="text-center mb-6">
-              <div className="inline-flex p-4 rounded-3xl bg-primary/10 text-primary mb-4">
-                <IconUserPlus size={40} stroke={1.5} />
+          <div className="card-body space-y-4">
+            <div className="card-body p-8 lg:px-10 lg:py-4">
+              <div className="text-center mb-6">
+                <div className="inline-flex p-4 rounded-3xl bg-primary/10 text-primary mb-4">
+                  <IconUserPlus size={40} stroke={1.5} />
+                </div>
+                <h1 className="text-3xl font-black tracking-tight">
+                  Join Medi<span className="text-primary">Queue</span>
+                </h1>
+                <p className="text-sm opacity-60 font-medium">
+                  Create your account to start managing appointments
+                </p>
               </div>
-              <h1 className="text-3xl font-black tracking-tight">
-                Join Medi<span className="text-primary">Queue</span>
-              </h1>
-              <p className="text-sm opacity-60 font-medium">
-                Create your account to start managing appointments
-              </p>
+              <>
+                <label className="text-[10px] uppercase font-black opacity-50 tracking-widest mb-3 block text-center">
+                  Registering as a
+                </label>
+                <div className="grid grid-cols-2 gap-2 bg-base-200 p-1.5 rounded-2xl">
+                  {["PATIENT", "STAFF"].map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => handleInputChange("role", r)}
+                      className={`py-2 px-1 rounded-xl text-xs font-black transition-all capitalize flex flex-col items-center gap-1 ${form.role === r ? "bg-base-100 text-primary shadow-sm" : "text-base-content/40 hover:text-base-content"}`}
+                    >
+                      {r === "PATIENT" && <IconUserCircle size={18} />}
+                      {r === "STAFF" && <IconUsers size={18} />} {r}
+                    </button>
+                  ))}
+                </div>
+              </>
             </div>
 
-            {/* Role Selector */}
-            <div className="mb-6">
-              <label className="text-[10px] uppercase font-black opacity-50 tracking-widest mb-3 block text-center">
-                Registering as a
-              </label>
-              <div className="grid grid-cols-3 gap-2 bg-base-200 p-1.5 rounded-2xl">
-                {["PATIENT", "DOCTOR", "STAFF"].map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => handleInputChange("role", r)}
-                    className={`py-2 px-1 rounded-xl text-xs font-black transition-all capitalize flex flex-col items-center gap-1 ${
-                      form.role === r
-                        ? "bg-base-100 text-primary shadow-sm"
-                        : "text-base-content/40 hover:text-base-content"
-                    }`}
-                  >
-                    {r === "PATIENT" && <IconUserCircle size={18} />}
-                    {r === "DOCTOR" && <IconStethoscope size={18} />}
-                    {r === "STAFF" && <IconUsers size={18} />}
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Form Fields */}
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <fieldset className="fieldset">
@@ -244,7 +238,6 @@ export default function SignUpPage() {
                     />
                   </div>
                 </fieldset>
-
                 <fieldset className="fieldset">
                   <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
                     Phone Number
@@ -263,47 +256,6 @@ export default function SignUpPage() {
                   </div>
                 </fieldset>
               </div>
-
-              {form.role === "DOCTOR" && (
-                <fieldset className="fieldset">
-                  <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
-                    Specialization
-                  </legend>
-                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
-                    <IconStethoscope className="opacity-30" size={18} />
-                    <input
-                      type="text"
-                      placeholder="e.g., Cardiology, Orthopedics"
-                      className="grow"
-                      value={form.specialization}
-                      onChange={(e) =>
-                        handleInputChange("specialization", e.target.value)
-                      }
-                    />
-                  </div>
-                </fieldset>
-              )}
-
-              {form.role === "STAFF" && (
-                <fieldset className="fieldset">
-                  <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
-                    Department
-                  </legend>
-                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
-                    <IconUsers className="opacity-30" size={18} />
-                    <input
-                      type="text"
-                      placeholder="e.g., Reception, Administration"
-                      className="grow"
-                      value={form.department}
-                      onChange={(e) =>
-                        handleInputChange("department", e.target.value)
-                      }
-                    />
-                  </div>
-                </fieldset>
-              )}
-
               <fieldset className="fieldset">
                 <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
                   Email Address
@@ -335,7 +287,6 @@ export default function SignUpPage() {
                     )}
                 </div>
               </fieldset>
-
               {/* Profile Image Field */}
               <fieldset className="fieldset">
                 <legend className="fieldset-legend">
@@ -359,9 +310,9 @@ export default function SignUpPage() {
                       className="btn btn-secondary join-item"
                       onClick={() =>
                         uploadImage(
-                          "applicant-profile-images",
+                          "profileImages",
                           form.name || "profile-image",
-                          "profileImage"
+                          "profileImage",
                         )
                       }
                     >
@@ -370,92 +321,157 @@ export default function SignUpPage() {
                   )}
                 </div>
               </fieldset>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {form.role === "STAFF" && (
+              <>
+                <div className="divider">Clinic Details</div>
                 <fieldset className="fieldset">
                   <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
-                    Password
+                    Clinic Name
                   </legend>
                   <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
-                    <IconLock className="opacity-30" size={18} />
+                    <IconHospital className="opacity-30" size={18} />
                     <input
-                      type={isPasswordVisible ? "text" : "password"}
-                      placeholder="••••••••"
+                      type="text"
+                      placeholder="Ganesh Hospital"
                       className="grow"
-                      value={form.password}
+                      value={form.clinicName}
                       onChange={(e) =>
-                        handleInputChange("password", e.target.value)
+                        handleInputChange("clinicName", e.target.value)
                       }
                     />
-                    <button
-                      onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                      className="opacity-50 hover:opacity-100"
-                    >
-                      {isPasswordVisible ? (
-                        <IconEyeOff size={16} />
-                      ) : (
-                        <IconEye size={16} />
-                      )}
-                    </button>
+                  </div>
+                </fieldset>
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
+                    Clinic District
+                  </legend>
+                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                    <IconHospital className="opacity-30" size={18} />
+                    <input
+                      type="text"
+                      className="grow"
+                      value={form.clinicDistrict}
+                      placeholder="District"
+                      onChange={(e) =>
+                        handleInputChange("clinicDistrict", e.target.value)
+                      }
+                    />
+                  </div>
+                </fieldset>
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
+                    Clinic Taluka
+                  </legend>
+                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                    <IconHospital className="opacity-30" size={18} />
+                    <input
+                      type="text"
+                      className="grow"
+                      value={form.clinicTaluka}
+                      placeholder="Taluka"
+                      onChange={(e) =>
+                        handleInputChange("clinicTaluka", e.target.value)
+                      }
+                    />
+                  </div>
+                </fieldset>
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
+                    Clinic State
+                  </legend>
+                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                    <IconHospital className="opacity-30" size={18} />
+                    <input
+                      type="text"
+                      className="grow"
+                      value={form.clinicState}
+                      placeholder="State"
+                      onChange={(e) =>
+                        handleInputChange("clinicState", e.target.value)
+                      }
+                    />
                   </div>
                 </fieldset>
 
                 <fieldset className="fieldset">
                   <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
-                    Confirm
+                    Clinic Address
                   </legend>
-                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
-                    <IconLock className="opacity-30" size={18} />
-                    <input
-                      type={isPasswordVisible ? "text" : "password"}
-                      placeholder="••••••••"
-                      className="grow"
-                      value={form.confirmPassword}
-                      onChange={(e) =>
-                        handleInputChange("confirmPassword", e.target.value)
-                      }
-                    />
-                  </div>
+                  <textarea
+                    className="textarea textarea-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20"
+                    value={form.clinicAddress}
+                    placeholder="Clinic Address"
+                    onChange={(e) =>
+                      handleInputChange("clinicAddress", e.target.value)
+                    }
+                  />
                 </fieldset>
-              </div>
+              </>
+            )}
 
-              <button
-                onClick={handleRegister}
-                disabled={isLoading || form.confirmPassword !== form.password}
-                className="btn btn-primary w-full rounded-2xl uppercase tracking-widest mt-4 shadow-lg shadow-primary/20 group flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <>
-                    <span className="loading loading-spinner loading-sm"></span>
-                    Creating Account...
-                  </>
-                ) : (
-                  <>
-                    Create Account
-                    <motion.div
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
-                    >
-                      <IconArrowNarrowRightDashed size={20} />
-                    </motion.div>
-                  </>
-                )}
-              </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <fieldset className="fieldset">
+                <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
+                  Password
+                </legend>
+                <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                  <IconLock className="opacity-30" size={18} />
+                  <input
+                    type={isPasswordVisible ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="grow"
+                    value={form.password}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value)
+                    }
+                  />
+                  <button
+                    onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                    className="opacity-50 hover:opacity-100"
+                  >
+                    {isPasswordVisible ? (
+                      <IconEyeOff size={16} />
+                    ) : (
+                      <IconEye size={16} />
+                    )}
+                  </button>
+                </div>
+              </fieldset>
+              <fieldset className="fieldset">
+                <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
+                  Confirm
+                </legend>
+                <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                  <IconLock className="opacity-30" size={18} />
+                  <input
+                    type={isPasswordVisible ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="grow"
+                    value={form.confirmPassword}
+                    onChange={(e) =>
+                      handleInputChange("confirmPassword", e.target.value)
+                    }
+                  />
+                </div>
+              </fieldset>
             </div>
 
-            <div className="divider">OR</div>
+            <button
+              onClick={handleRegister}
+              disabled={isLoading}
+              className="btn btn-primary w-full"
+            >
+              {isLoading ? "Creating..." : "Create Account"}
+            </button>
 
-            <div className="text-center">
-              <p className="text-sm opacity-60">
-                Already have an account?{" "}
-                <Link
-                  href="/login"
-                  className="text-primary font-black hover:underline underline-offset-4"
-                >
-                  Login here
-                </Link>
-              </p>
-            </div>
+            <p className="text-center text-sm">
+              Already have an account ?{" "}
+              <Link href="/login" className="text-primary font-bold">
+                Login
+              </Link>
+            </p>
           </div>
         </motion.div>
       </div>

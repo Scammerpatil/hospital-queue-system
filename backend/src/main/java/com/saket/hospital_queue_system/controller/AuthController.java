@@ -61,7 +61,7 @@ public class AuthController {
     } catch (Exception e) {
       System.out.println("AuthController: Login error: " + e.getMessage());
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-          .body(new AuthResponse(null, null, null, null, "Login failed: " + e.getMessage()));
+          .body(new AuthResponse(null, null, null, null,null, "Login failed: " + e.getMessage()));
     }
   }
 

@@ -106,7 +106,7 @@ export default function MyAppointments() {
           </p>
         </div>
         <Link
-          href="/patient/appointments/book"
+          href="/patient/clinics"
           className="btn btn-primary btn-wide shadow-lg shadow-primary/20 gap-2"
         >
           <IconPlus size={20} stroke={3} />
@@ -134,7 +134,7 @@ export default function MyAppointments() {
               >
                 {status === "ALL" ? "All Visits" : status.replace("_", " ")}
               </button>
-            )
+            ),
           )}
         </div>
       </div>
@@ -229,10 +229,16 @@ export default function MyAppointments() {
                   )}
 
                   {/* Action Footer */}
-                  <div className="card-actions justify-end mt-6 pt-4 border-t border-base-content">
+                  <div className="card-actions gap-6 mt-6 pt-4 border-t border-base-content">
+                    <Link
+                      href={`/patient/queue`}
+                      className="btn btn-neutral btn-outline btn-sm font-bold"
+                    >
+                      View Queue Status
+                    </Link>
                     <Link
                       href={`/patient/appointments/${apt.id}`}
-                      className="btn btn-neutral btn-sm font-bold text-xs"
+                      className="btn btn-neutral btn-sm font-bold"
                     >
                       View Full Details
                     </Link>

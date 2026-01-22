@@ -21,14 +21,8 @@ public class Staff {
   @JoinColumn(name = "user_id", nullable = false, unique = true)
   private User user;
 
-  @Column(length = 100)
-  private String clinicName; // Clinic name
-
-  @Column(length = 100)
-  private String district; // District name
-
-  @Column(length = 100)
-  private String taluka; // Taluka/Subdivision name
+  @ManyToOne
+  private Clinic clinic;
 
   @Column(length = 100)
   private String department;

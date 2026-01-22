@@ -46,10 +46,10 @@ const App = () => {
   const [userRole, setUserRole] = useState("patient"); // patient, compounder, doctor
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedArea, setSelectedArea] = useState("");
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [user, setUser] = useState(null);
-  const [booking, setBooking] = useState(null);
-  const [queue, setQueue] = useState([]);
+  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
+  const [booking, setBooking] = useState<any>(null);
+  const [queue, setQueue] = useState<any[]>([]);
   const [filters, setFilters] = useState({ specialization: "all" });
 
   // Simulated queue management
@@ -134,6 +134,8 @@ const App = () => {
         name: "John Doe",
         email: credentials.email,
         phone: "+91 98765 43210",
+        profileImage: "",
+        role: credentials.role,
       });
       setUserRole(credentials.role);
       if (credentials.role === "patient") {
@@ -455,7 +457,7 @@ const App = () => {
         (selectedCity === "" || doc.city === selectedCity) &&
         (selectedArea === "" || doc.area === selectedArea) &&
         (filters.specialization === "all" ||
-          doc.specialization === filters.specialization)
+          doc.specialization === filters.specialization),
     );
 
     return (
@@ -757,14 +759,13 @@ const App = () => {
           token: i + 1,
           name: `Patient ${i + 1}`,
           status: "waiting",
-        })
+        }),
       );
       initialQueue.push({
         id: newBooking.token,
         token: newBooking.token,
         name: newBooking.patient,
         status: "waiting",
-        isYou: true,
       });
       setQueue(initialQueue);
 
@@ -1122,7 +1123,7 @@ const App = () => {
                 <button
                   onClick={() => {
                     alert(
-                      `Alarm set! You'll be notified when ${alarmThreshold} patients remain.`
+                      `Alarm set! You'll be notified when ${alarmThreshold} patients remain.`,
                     );
                     setShowAlarmModal(false);
                   }}
@@ -1269,8 +1270,8 @@ const App = () => {
                   doctorStatus === "arrived"
                     ? "bg-green-500"
                     : doctorStatus === "on-break"
-                    ? "bg-yellow-500"
-                    : "bg-red-500"
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
                 }`}
               ></div>
               <span className="font-medium capitalize">
@@ -1328,10 +1329,10 @@ const App = () => {
                               patient.status === "waiting"
                                 ? "bg-yellow-100 text-yellow-700"
                                 : patient.status === "in-consultation"
-                                ? "bg-blue-100 text-blue-700"
-                                : patient.status === "completed"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : patient.status === "completed"
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-red-100 text-red-700"
                             }`}
                           >
                             {patient.status}
@@ -1470,13 +1471,13 @@ const App = () => {
           "https://meet.google.com/" + Math.random().toString(36).substring(7);
         setPatients(
           patients.map((p) =>
-            p.id === id ? { ...p, status: "accepted", meetingLink } : p
-          )
+            p.id === id ? { ...p, status: "accepted", meetingLink } : p,
+          ),
         );
         alert(`Online consultation accepted! Meeting link: ${meetingLink}`);
       } else {
         setPatients(
-          patients.map((p) => (p.id === id ? { ...p, status: "rejected" } : p))
+          patients.map((p) => (p.id === id ? { ...p, status: "rejected" } : p)),
         );
       }
     };
@@ -1525,7 +1526,7 @@ const App = () => {
                 {
                   patients.filter(
                     (p) =>
-                      p.consultationType === "online" && p.status === "waiting"
+                      p.consultationType === "online" && p.status === "waiting",
                   ).length
                 }
               </p>
@@ -1674,10 +1675,10 @@ const App = () => {
                               patient.status === "waiting"
                                 ? "bg-yellow-100 text-yellow-700"
                                 : patient.status === "accepted"
-                                ? "bg-green-100 text-green-700"
-                                : patient.status === "rejected"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-gray-100 text-gray-700"
+                                  ? "bg-green-100 text-green-700"
+                                  : patient.status === "rejected"
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-gray-100 text-gray-700"
                             }`}
                           >
                             {patient.status}
@@ -1726,8 +1727,8 @@ const App = () => {
                               patients.map((p) =>
                                 p.id === patient.id
                                   ? { ...p, status: "completed" }
-                                  : p
-                              )
+                                  : p,
+                              ),
                             )
                           }
                           className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium"

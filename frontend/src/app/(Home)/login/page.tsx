@@ -44,13 +44,12 @@ export default function LoginPage() {
 
       if (response && response.role) {
         toast.success(`Welcome back, ${response.role}!`);
-        // Navigate based on role from backend
         router.push(`/${response.role.toLowerCase()}/dashboard`);
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Login failed";
-      toast.error(errorMessage);
+      toast.error(
+        error.response?.data?.message || "Login failed. Please try again.",
+      );
       console.error("Login error:", error);
     } finally {
       setIsLoading(false);

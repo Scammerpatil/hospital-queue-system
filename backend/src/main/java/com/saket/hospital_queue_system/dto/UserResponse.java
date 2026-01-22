@@ -15,5 +15,6 @@ public class UserResponse {
   private String phone;
   private String profileImage;
   private Role role;
+  private Long clinicId;
   private Boolean isActive;
 }

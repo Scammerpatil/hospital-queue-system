@@ -1,21 +1,10 @@
 import React from "react";
-import { IconMapPin, IconStethoscope, IconUsers } from "@tabler/icons-react";
-
-interface Doctor {
-  id: number;
-  name: string;
-  specialization: string;
-}
-
-interface ClinicCardProps {
-  clinicName: string;
-  district: string;
-  taluka: string;
-  doctors: Doctor[];
-  specializations: string[];
-  totalDoctors: number;
-  onSelectClinic?: () => void;
-}
+import {
+  IconMapPin,
+  IconStethoscope,
+  IconUsers,
+  IconChevronRight,
+} from "@tabler/icons-react";
 
 export default function ClinicCard({
   clinicName,
@@ -25,100 +14,64 @@ export default function ClinicCard({
   specializations,
   totalDoctors,
   onSelectClinic,
-}: ClinicCardProps) {
+}: any) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-200 dark:border-gray-700">
-      {/* Header */}
-      <div className="mb-4">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-          {clinicName}
-        </h3>
-        <div className="flex items-center text-sm text-gray-600 dark:text-gray-300 gap-1">
-          <IconMapPin size={16} />
+    <div className="group card bg-base-100 border border-base-300 hover:border-primary transition-all duration-300 rounded-4xl overflow-hidden">
+      <div className="card-body p-8">
+        <div className="flex justify-between items-start mb-4">
+          <h3 className="text-2xl font-black group-hover:text-primary transition-colors leading-tight">
+            {clinicName}
+          </h3>
+        </div>
+
+        <div className="flex items-center gap-2 text-sm font-bold opacity-60 mb-6">
+          <IconMapPin size={16} className="text-primary" />
           <span>
             {taluka}, {district}
           </span>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-4 py-4 border-y border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <IconUsers size={20} className="text-blue-500" />
-          <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Doctors</p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-              {totalDoctors}
+        <div className="grid grid-cols-2 gap-4 py-4 border-y border-base-200 mb-6">
+          <div className="space-y-1">
+            <p className="text-[10px] font-black uppercase opacity-40 tracking-widest">
+              Medical Staff
             </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <IconStethoscope size={20} className="text-green-500" />
-          <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Specializations
-            </p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-              {specializations.length}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Specializations */}
-      <div className="mb-4">
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          Specializations
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {specializations.slice(0, 3).map((spec, index) => (
-            <span
-              key={index}
-              className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded"
-            >
-              {spec}
-            </span>
-          ))}
-          {specializations.length > 3 && (
-            <span className="inline-block bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs px-2 py-1 rounded">
-              +{specializations.length - 3} more
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Doctor List Preview */}
-      <div className="mb-4">
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          Doctors
-        </p>
-        <div className="space-y-1">
-          {doctors.slice(0, 3).map((doctor) => (
-            <div
-              key={doctor.id}
-              className="text-sm text-gray-600 dark:text-gray-400 flex justify-between"
-            >
-              <span className="font-medium">{doctor.name}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-500">
-                {doctor.specialization}
-              </span>
+            <div className="flex items-center gap-2 font-bold text-lg">
+              <IconUsers size={18} className="text-primary" /> {totalDoctors}
             </div>
-          ))}
-          {doctors.length > 3 && (
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-              +{doctors.length - 3} more doctors
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] font-black uppercase opacity-40 tracking-widest">
+              Services
             </p>
-          )}
+            <div className="flex items-center gap-2 font-bold text-lg">
+              <IconStethoscope size={18} className="text-emerald-500" />{" "}
+              {specializations.length}
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Action Button */}
-      <button
-        onClick={onSelectClinic}
-        className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-      >
-        View Clinic & Book
-      </button>
+        <div className="space-y-3 mb-8">
+          <p className="text-[10px] font-black uppercase opacity-40 tracking-widest">
+            Top Specialists
+          </p>
+          <div className="space-y-2">
+            {doctors.slice(0, 2).map((doc: any) => (
+              <div key={doc.id} className="flex justify-between text-sm">
+                <span className="font-bold">{doc.name}</span>
+                <span className="opacity-60">{doc.specialization}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={onSelectClinic}
+          className="btn btn-primary w-full rounded-2xl shadow-lg shadow-primary/20 group-hover:gap-4 transition-all"
+        >
+          View & Book <IconChevronRight size={18} />
+        </button>
+      </div>
     </div>
   );
 }
