@@ -3,27 +3,20 @@
 import { useEffect, useState } from "react";
 import { staffDashboardService } from "@/services/staffDashboardService";
 import Link from "next/link";
+import {
+  IconUsers,
+  IconStethoscope,
+  IconCalendarEvent,
+  IconClock,
+  IconSettings,
+  IconAlertCircle,
+  IconChevronRight,
+  IconArrowRight,
+} from "@tabler/icons-react";
+import Loading from "@/components/Loading";
+import ErrorState from "@/components/ErrorState";
 
-interface AppointmentDto {
-  id: number;
-  patientName: string;
-  appointmentDate: string;
-  appointmentTime: string;
-  status: string;
-  notes: string;
-}
-
-interface StaffDashboardData {
-  staffName: string;
-  email: string;
-  department: string;
-  isActive: boolean;
-  totalPatients: number;
-  totalDoctors: number;
-  totalAppointments: number;
-  todayAppointments: number;
-  recentAppointments: AppointmentDto[];
-}
+// --- Main Component ---
 
 export default function StaffDashboardPage() {
   const [data, setData] = useState<StaffDashboardData | null>(null);
@@ -35,242 +28,191 @@ export default function StaffDashboardPage() {
       try {
         setLoading(true);
         const response = await staffDashboardService.getStaffDashboard();
-        console.log("Staff Dashboard data fetched:", response);
         setData(response);
         setError(null);
       } catch (err: any) {
-        console.error("Error fetching dashboard:", err);
-        setError(err.message || "Failed to load dashboard");
+        setError(err.message || "Failed to load dashboard data.");
       } finally {
         setLoading(false);
       }
     };
-
     fetchDashboard();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="alert alert-error">
-          <span>{error}</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="alert alert-warning">
-          <span>No data available</span>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <Loading />;
+  if (error) return <ErrorState message={error} />;
+  if (!data) return <div className="p-10 text-center">No data available</div>;
 
   return (
-    <div className="min-h-screen bg-base-100 p-4 lg:p-8">
+    <div className="min-h-screen bg-base-100 p-4 lg:p-8 space-y-8">
       {/* Header Section */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-base-content">
-          Welcome, {data.staffName}! 👋
-        </h1>
-        <p className="text-base-content/70 mt-2">{data.email}</p>
-        <div className="mt-2">
-          <span
-            className={`badge ${
-              data.isActive ? "badge-success" : "badge-warning"
-            }`}
-          >
-            {data.isActive ? "Active" : "Inactive"}
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight text-base-content">
+            Welcome, {data.staffName.split(" ")[0]}! 👋
+          </h1>
+          <p className="text-base-content/60 font-medium">{data.email}</p>
+        </div>
+        <div className="flex gap-2">
+          <span className="badge badge-neutral badge-lg py-4">
+            {data.department}
           </span>
-          <span className="badge badge-neutral ml-2">{data.department}</span>
+          <span
+            className={`badge badge-lg py-4 ${data.isActive ? "badge-success" : "badge-warning"}`}
+          >
+            {data.isActive ? "Active Account" : "Inactive"}
+          </span>
         </div>
-      </div>
+      </header>
 
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        {/* Total Patients */}
-        <div className="stat bg-base-200 rounded-lg shadow">
+      {/* Stats Section - Using DaisyUI Stat Group */}
+      <div className="stats stats-vertical lg:stats-horizontal shadow-sm bg-base-200 w-full border border-base-300">
+        <div className="stat">
           <div className="stat-figure text-primary">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="inline-block w-8 h-8 stroke-current"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10h.01M13 16H3v-2a6 6 0 0112 0v2z"
-              ></path>
-            </svg>
+            <IconStethoscope size={32} />
           </div>
-          <div className="stat-title">Total Patients</div>
-          <div className="stat-value text-primary text-3xl">
-            {data.totalPatients}
-          </div>
+          <div className="stat-title font-semibold">Total Doctors</div>
+          <div className="stat-value text-primary">{data.totalDoctors}</div>
+          <div className="stat-desc">Active in {data.department}</div>
         </div>
 
-        {/* Total Doctors */}
-        <div className="stat bg-base-200 rounded-lg shadow">
-          <div className="stat-figure text-success">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="inline-block w-8 h-8 stroke-current"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-              ></path>
-            </svg>
+        <div className="stat">
+          <div className="stat-figure text-secondary">
+            <IconCalendarEvent size={32} />
           </div>
-          <div className="stat-title">Total Doctors</div>
-          <div className="stat-value text-success text-3xl">
-            {data.totalDoctors}
-          </div>
-        </div>
-
-        {/* Total Appointments */}
-        <div className="stat bg-base-200 rounded-lg shadow">
-          <div className="stat-figure text-info">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="inline-block w-8 h-8 stroke-current"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              ></path>
-            </svg>
-          </div>
-          <div className="stat-title">Total Appointments</div>
-          <div className="stat-value text-info text-3xl">
+          <div className="stat-title font-semibold">Total Appointments</div>
+          <div className="stat-value text-secondary">
             {data.totalAppointments}
           </div>
+          <div className="stat-desc">Cumulative total</div>
         </div>
 
-        {/* Today's Appointments */}
-        <div className="stat bg-base-200 rounded-lg shadow">
-          <div className="stat-figure text-warning">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="inline-block w-8 h-8 stroke-current"
+        <div className="stat">
+          <div className="stat-figure text-accent">
+            <IconClock size={32} />
+          </div>
+          <div className="stat-title font-semibold">Today&apos;s Schedule</div>
+          <div className="stat-value text-accent">{data.todayAppointments}</div>
+          <div className="stat-desc">Remaining for today</div>
+        </div>
+
+        <div className="stat">
+          <div className="stat-figure text-info">
+            <IconUsers size={32} />
+          </div>
+          <div className="stat-title font-semibold">Total Patients</div>
+          <div className="stat-value text-info">{data.totalPatients}</div>
+          <div className="stat-desc">Registered patients</div>
+        </div>
+      </div>
+
+      {/* Quick Actions Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[
+          {
+            label: "Doctors",
+            sub: "Manage medical staff",
+            icon: <IconStethoscope />,
+            href: "/staff/doctors",
+            color: "hover:border-primary",
+          },
+          {
+            label: "Appointments",
+            sub: "Schedule and tracking",
+            icon: <IconCalendarEvent />,
+            href: "/staff/appointments",
+            color: "hover:border-secondary",
+          },
+          {
+            label: "Settings",
+            sub: "System configuration",
+            icon: <IconSettings />,
+            href: "/staff/settings",
+            color: "hover:border-accent",
+          },
+        ].map((action) => (
+          <Link
+            key={action.label}
+            href={action.href}
+            className={`card bg-base-200 border-2 border-transparent transition-all duration-300 shadow-sm ${action.color} group`}
+          >
+            <div className="card-body flex-row items-center gap-4">
+              <div className="p-3 bg-base-100 rounded-xl group-hover:scale-110 transition-transform">
+                {action.icon}
+              </div>
+              <div className="flex-1">
+                <h3 className="card-title text-md mb-0">{action.label}</h3>
+                <p className="text-xs text-base-content/60">{action.sub}</p>
+              </div>
+              <IconChevronRight
+                size={18}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+              />
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Recent Appointments Table */}
+      <div className="card bg-base-100 border border-base-300 shadow-sm">
+        <div className="card-body p-0 md:p-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-6 py-4 md:p-0 mb-2">
+            <div>
+              <h2 className="card-title text-2xl font-bold">
+                Upcoming Appointments
+              </h2>
+              <p className="text-sm text-base-content/60 font-medium">
+                Review your agenda for today
+              </p>
+            </div>
+            <Link
+              href="/staff/appointments"
+              className="btn btn-ghost btn-sm gap-2"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              ></path>
-            </svg>
-          </div>
-          <div className="stat-title">Today's Appointments</div>
-          <div className="stat-value text-warning text-3xl">
-            {data.todayAppointments}
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <Link
-          href="/staff/patients"
-          className="card bg-base-200 shadow hover:shadow-lg transition"
-        >
-          <div className="card-body items-center text-center">
-            <h3 className="card-title text-lg">Patients</h3>
-            <p className="text-sm text-base-content/70">
-              Manage patient records
-            </p>
-          </div>
-        </Link>
-        <Link
-          href="/staff/doctors"
-          className="card bg-base-200 shadow hover:shadow-lg transition"
-        >
-          <div className="card-body items-center text-center">
-            <h3 className="card-title text-lg">Doctors</h3>
-            <p className="text-sm text-base-content/70">
-              Manage doctor profiles
-            </p>
-          </div>
-        </Link>
-        <Link
-          href="/staff/appointments"
-          className="card bg-base-200 shadow hover:shadow-lg transition"
-        >
-          <div className="card-body items-center text-center">
-            <h3 className="card-title text-lg">Appointments</h3>
-            <p className="text-sm text-base-content/70">
-              View all appointments
-            </p>
-          </div>
-        </Link>
-        <Link
-          href="/staff/settings"
-          className="card bg-base-200 shadow hover:shadow-lg transition"
-        >
-          <div className="card-body items-center text-center">
-            <h3 className="card-title text-lg">Settings</h3>
-            <p className="text-sm text-base-content/70">System configuration</p>
-          </div>
-        </Link>
-      </div>
-
-      {/* Recent Appointments Section */}
-      <div className="card bg-base-200 shadow">
-        <div className="card-body">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="card-title">Today's Appointments</h2>
-            <Link href="/staff/appointments" className="btn btn-primary btn-sm">
-              View All
+              View Full History <IconArrowRight size={16} />
             </Link>
           </div>
 
           {data.recentAppointments.length === 0 ? (
-            <div className="alert">
-              <span>No appointments scheduled for today.</span>
+            <div className="p-12 text-center">
+              <IconCalendarEvent
+                size={48}
+                className="mx-auto mb-4 opacity-20"
+              />
+              <p className="text-base-content/50 italic">
+                No appointments scheduled for today.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="table table-zebra w-full">
-                <thead>
+              <table className="table table-lg w-full">
+                <thead className="bg-base-200/50">
                   <tr>
-                    <th>Patient</th>
-                    <th>Time</th>
+                    <th>Patient Name</th>
+                    <th>Time Slot</th>
                     <th>Status</th>
-                    <th>Notes</th>
+                    <th className="hidden md:table-cell">Notes</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.recentAppointments.map((apt) => (
-                    <tr key={apt.id}>
-                      <td className="font-semibold">{apt.patientName}</td>
-                      <td>{apt.appointmentTime}</td>
+                  {data.recentAppointments.map((apt: any) => (
+                    <tr
+                      key={apt.id}
+                      className="hover:bg-base-200/30 transition-colors"
+                    >
+                      <td className="font-bold">{apt.patientName}</td>
+                      <td>
+                        <div className="flex items-center gap-2">
+                          <IconClock
+                            size={16}
+                            className="text-base-content/40"
+                          />
+                          {apt.appointmentTime}
+                        </div>
+                      </td>
                       <td>
                         <div
-                          className={`badge ${
+                          className={`badge badge-sm font-bold ${
                             apt.status === "COMPLETED"
                               ? "badge-success"
                               : apt.status === "BOOKED"
@@ -281,7 +223,9 @@ export default function StaffDashboardPage() {
                           {apt.status}
                         </div>
                       </td>
-                      <td className="text-xs">{apt.notes || "-"}</td>
+                      <td className="text-xs text-base-content/60 italic hidden md:table-cell">
+                        {apt.notes || "No additional notes"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

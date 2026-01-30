@@ -27,12 +27,12 @@ public class AppointmentResponseDto {
     private String appointmentDate;
     private String appointmentTime;
 
-    private AppointmentType appointmentType;
-    private AppointmentStatus status;
+    private String appointmentType;
+    private String status;
 
     private Integer queueNumber;
     private String meetingLink;
-    private PaymentStatus paymentStatus;
+    private String paymentStatus;
     private String notes;
 
     public static AppointmentResponseDto from(Appointment a) {
@@ -47,18 +47,17 @@ public class AppointmentResponseDto {
                 .patientName(
                         a.getPatient().getPatientName() != null
                                 ? a.getPatient().getPatientName()
-                                : a.getPatient().getUser().getName()
-                )
+                                : a.getPatient().getUser().getName())
                 .patientAge(a.getPatient().getAge())
                 .patientGender(a.getPatient().getGender())
                 .patientPhoneNumber(a.getPatient().getPhoneNumber())
                 .appointmentDate(a.getAppointmentDate().toString())
                 .appointmentTime(a.getAppointmentTime().toString())
-                .appointmentType(a.getAppointmentType())
-                .status(a.getStatus())
+                .appointmentType(a.getAppointmentType() != null ? a.getAppointmentType().toString() : null)
+                .status(a.getStatus() != null ? a.getStatus().toString() : null)
                 .queueNumber(a.getQueueNumber())
                 .meetingLink(a.getMeetingLink())
-                .paymentStatus(a.getPaymentStatus())
+                .paymentStatus(a.getPaymentStatus() != null ? a.getPaymentStatus().toString() : null)
                 .notes(a.getNotes())
                 .build();
     }

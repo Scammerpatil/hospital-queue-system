@@ -77,7 +77,7 @@ export default function StaffProfile() {
   if (loading) return <Loading />;
 
   return (
-    <div className="max-w-5xl mx-auto p-4 lg:p-8">
+    <div className="p-4 lg:p-8">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div>
@@ -166,105 +166,83 @@ export default function StaffProfile() {
             <div className="card-body p-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Department */}
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-black uppercase text-[10px] tracking-widest opacity-50">
-                      Department
-                    </span>
-                  </label>
-                  <div className="relative">
-                    <IconHierarchy
-                      className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30"
-                      size={18}
-                    />
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend uppercase">
+                    Department
+                  </legend>
+                  <div className="input input-primary w-full disabled:opacity-100">
+                    <IconHierarchy size={18} className="opacity-30" />
                     <input
                       name="department"
                       disabled={!editing}
                       value={formData.department || ""}
                       onChange={handleChange}
-                      className="input input-bordered w-full pl-12 font-bold focus:border-primary disabled:bg-base-100 disabled:opacity-100"
+                      className="grow"
                     />
                   </div>
-                </div>
+                </fieldset>
 
                 {/* Position */}
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-black uppercase text-[10px] tracking-widest opacity-50">
-                      Role / Position
-                    </span>
-                  </label>
-                  <div className="relative">
-                    <IconBriefcase
-                      className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30"
-                      size={18}
-                    />
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend uppercase">
+                    Role / Position
+                  </legend>
+                  <div className="input input-primary w-full disabled:opacity-100">
+                    <IconBriefcase size={18} className="opacity-30" />
                     <input
                       name="position"
                       disabled={!editing}
                       value={formData.position || ""}
                       onChange={handleChange}
-                      className="input input-bordered w-full pl-12 font-bold focus:border-primary disabled:bg-base-100 disabled:opacity-100"
+                      className="grow"
                     />
                   </div>
-                </div>
+                </fieldset>
 
-                {/* Email (Editable based on backend policy) */}
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-black uppercase text-[10px] tracking-widest opacity-50">
-                      Work Email
-                    </span>
-                  </label>
-                  <div className="relative">
-                    <IconMail
-                      className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30"
-                      size={18}
-                    />
+                {/* Work Email */}
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend uppercase">
+                    Work Email
+                  </legend>
+                  <div className="input input-primary w-full disabled:opacity-100">
+                    <IconMail size={18} className="opacity-30" />
                     <input
                       type="email"
                       name="email"
                       disabled={!editing}
                       value={formData.email || ""}
                       onChange={handleChange}
-                      className="input input-bordered w-full pl-12 font-bold focus:border-primary disabled:bg-base-100 disabled:opacity-100"
+                      className="grow"
                     />
                   </div>
-                </div>
+                </fieldset>
 
                 {/* Phone */}
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-black uppercase text-[10px] tracking-widest opacity-50">
-                      Contact Phone
-                    </span>
-                  </label>
-                  <div className="relative">
-                    <IconPhone
-                      className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30"
-                      size={18}
-                    />
+                <fieldset className="fieldset">
+                  <legend className="fieldset-legend uppercase">
+                    Contact Phone
+                  </legend>
+                  <div className="input input-primary w-full disabled:opacity-100">
+                    <IconPhone size={18} className="opacity-30" />
                     <input
                       name="phone"
                       disabled={!editing}
                       value={formData.phone || ""}
                       onChange={handleChange}
-                      className="input input-bordered w-full pl-12 font-bold focus:border-primary disabled:bg-base-100 disabled:opacity-100"
+                      className="grow"
                     />
                   </div>
-                </div>
+                </fieldset>
 
                 {/* Notes */}
-                <div className="form-control w-full md:col-span-2">
-                  <label className="label">
-                    <span className="label-text font-black uppercase text-[10px] tracking-widest opacity-50">
-                      Professional Bio / Notes
-                    </span>
-                  </label>
-                  <div className="relative">
+                <fieldset className="fieldset md:col-span-2">
+                  <legend className="fieldset-legend uppercase">
+                    Professional Bio / Notes
+                  </legend>
+                  <div className="textarea textarea-primary w-full disabled:opacity-100">
                     <IconNotes
-                      className="absolute left-4 top-4 opacity-30"
                       size={18}
+                      className="absolute left-4 top-4 opacity-30"
                     />
                     <textarea
                       name="notes"
@@ -272,10 +250,10 @@ export default function StaffProfile() {
                       value={formData.notes || ""}
                       onChange={handleChange}
                       rows={4}
-                      className="textarea textarea-bordered w-full pl-12 font-bold focus:border-primary disabled:bg-base-100 disabled:opacity-100"
+                      className="grow"
                     />
                   </div>
-                </div>
+                </fieldset>
               </div>
 
               {editing && (

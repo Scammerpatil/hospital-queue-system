@@ -2,6 +2,7 @@ package com.saket.hospital_queue_system.controller;
 
 import com.saket.hospital_queue_system.dto.*;
 import com.saket.hospital_queue_system.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
@@ -16,8 +17,9 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
+    // COPILOT-FIX: CRITICAL - Added @Valid annotation
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody SignupRequest request) {
+    public ResponseEntity<String> signup(@Valid @RequestBody SignupRequest request) {
         System.out.println("AuthController: POST /api/auth/signup");
         try {
             boolean signupSuccess = authService.signup(request);
@@ -37,8 +39,9 @@ public class AuthController {
         }
     }
 
+    // COPILOT-FIX: CRITICAL - Added @Valid annotation
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         System.out.println("AuthController: POST /api/auth/login");
         try {
             AuthResponse response = authService.login(request);
@@ -46,8 +49,8 @@ public class AuthController {
 
             ResponseCookie cookie = ResponseCookie.from("authToken", token)
                     .httpOnly(true)
-                    .secure(true)
-                    .sameSite("None")
+                    .secure(false)
+                    .sameSite("Lax")
                     .path("/")
                     .maxAge(60 * 60)
                     .build();
@@ -64,8 +67,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new AuthResponse(
                             null, null, null, null, null,
-                            "Login failed: " + e.getMessage()
-                    ));
+                            "Login failed: " + e.getMessage()));
         }
     }
 
@@ -73,8 +75,7 @@ public class AuthController {
     public ResponseEntity<UserResponse> getCurrentUser() {
         System.out.println("AuthController: GET /api/auth/me");
         try {
-            Authentication authentication =
-                    SecurityContextHolder.getContext().getAuthentication();
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (authentication == null || !authentication.isAuthenticated()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

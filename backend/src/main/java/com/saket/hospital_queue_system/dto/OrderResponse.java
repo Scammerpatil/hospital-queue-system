@@ -1,4 +1,3 @@
 package com.saket.hospital_queue_system.dto;
 
-public class OrderResponse {
-}
+public record OrderResponse(String razorpayOrderId, Long amount, String currency) {}

@@ -21,10 +21,8 @@ public class UpdatePatientProfileRequest {
   @Pattern(regexp = "^[0-9]{10,15}$", message = "Phone number should contain 10-15 digits")
   private String phone;
 
-  @NotBlank(message = "Age cannot be blank")
   private Integer age;
 
-  @NotBlank(message = "Gender cannot be blank")
   private String gender;
 
   private String address;

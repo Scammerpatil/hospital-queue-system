@@ -34,53 +34,107 @@ const ClinicCard = ({
 }: {
   doctor: Doctor;
   onSelect: () => void;
-}) => (
-  <div className="card bg-base-200 shadow hover:shadow-md transition-shadow">
-    <div className="card-body p-6">
-      <div className="flex justify-between items-start mb-2">
-        <h2 className="card-title text-xl font-bold">{doctor?.clinic?.name}</h2>
-        <div className="badge badge-primary badge-outline text-[10px] font-bold">
-          OPEN
-        </div>
-      </div>
+}) => {
+  // Helper to generate Google Maps link
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${doctor?.clinic?.name} ${doctor?.clinic?.address} ${doctor?.clinic?.taluka} ${doctor?.clinic?.district}`,
+  )}`;
 
-      <div className="flex items-center gap-2 text-sm text-base-content/70 mb-4">
-        <IconMapPin size={16} />
-        <span>
-          {doctor?.clinic?.address}, {doctor?.clinic?.taluka},{" "}
-          {doctor?.clinic?.district}
-        </span>
-      </div>
+  return (
+    <div className="card bg-base-200 border border-base-300 hover:border-primary/50 shadow-sm hover:shadow-xl transition-all duration-300 group">
+      <div className="card-body p-5">
+        {/* Header Section: Doctor Profile & Status */}
+        <div className="flex gap-4 items-start">
+          <div className="avatar">
+            <div className="w-16 h-16 rounded-xl ring ring-primary ring-offset-base-100 ring-offset-2">
+              <img
+                src={
+                  doctor.profileImage ||
+                  "https://api.dicebear.com/7.x/avataaars/svg?seed=doctor"
+                }
+                alt={doctor?.name}
+              />
+            </div>
+          </div>
+          <div className="flex-1">
+            <div className="flex justify-between items-start">
+              <span className="badge badge-success badge-sm text-[10px] font-bold uppercase tracking-wider">
+                Available
+              </span>
+              <div className="flex items-center text-warning">
+                <IconStar size={14} className="fill-current" />
+                <span className="text-xs font-bold ml-1 text-base-content">
+                  4.8
+                </span>
+              </div>
+            </div>
+            <h3 className="font-bold text-lg text-base-content group-hover:text-primary transition-colors">
+              {doctor?.name}
+            </h3>
+            <p className="text-xs font-semibold text-primary uppercase tracking-tight">
+              {doctor?.specialization}
+            </p>
+          </div>
+        </div>
 
-      <div className="space-y-3 py-4 border-y border-base-300 mb-4 text-sm">
-        <div className="flex justify-between">
-          <span className="font-semibold text-base-content/60">Doctor:</span>
-          <span className="font-bold">{doctor?.user.name}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="font-semibold text-base-content/60">
-            Specialization:
-          </span>
-          <span className="font-bold text-primary">
-            {doctor?.specialization}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="font-semibold text-base-content/60">
-            Queue Status:
-          </span>
-          <span className="font-bold">12 patients</span>
-        </div>
-      </div>
+        <div className="divider my-1 opacity-50"></div>
 
-      <div className="card-actions">
-        <button onClick={onSelect} className="btn btn-primary btn-block w-full">
-          View & Book Appointment
-        </button>
+        {/* Clinic Info Section */}
+        <div className="space-y-3">
+          <div>
+            <h4 className="text-sm font-bold flex items-center gap-1">
+              <IconBuildingHospital
+                size={16}
+                className="text-base-content/60"
+              />
+              {doctor?.clinic?.name}
+            </h4>
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-base-content/70 flex items-start gap-1 mt-1 hover:text-primary hover:underline transition-all"
+            >
+              <IconMapPin size={14} className="mt-0.5 shrink-0" />
+              <span>
+                {doctor?.clinic?.address}, {doctor?.clinic?.taluka}
+              </span>
+            </a>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 bg-base-200/50 p-3 rounded-lg">
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase opacity-50 font-bold">
+                Queue
+              </span>
+              <span className="text-sm font-bold flex items-center gap-1">
+                <IconUsers size={14} /> 12 patients
+              </span>
+            </div>
+            <div className="flex flex-col border-l border-base-300 pl-3">
+              <span className="text-[10px] uppercase opacity-50 font-bold">
+                Fee
+              </span>
+              <span className="text-sm font-bold text-success">
+                ₹{doctor?.consultationFee}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Section */}
+        <div className="card-actions mt-4">
+          <button
+            onClick={onSelect}
+            className="btn btn-primary btn-block shadow-lg shadow-primary/20 group-hover:scale-[1.02] transition-transform"
+          >
+            Book Appointment
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function ClinicDiscovery() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -134,6 +188,59 @@ export default function ClinicDiscovery() {
     };
     initFetch();
   }, []);
+
+  // Inside ClinicDiscovery component
+  const handleRazorpayPayment = async (
+    appointmentId: string,
+    amount: number,
+  ) => {
+    try {
+      // 1. Create Order on Backend
+      const { data: order } = await axios.post(
+        "http://localhost:8080/api/payments/create-order",
+        {
+          appointmentId,
+          amount: amount * 100, // Razorpay expects paise
+          currency: "INR",
+        },
+      );
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Clinic Connect",
+        description: `Appointment with ${selectedDoctor?.user.name}`,
+        order_id: order.razorpayOrderId,
+        handler: async (response: any) => {
+          // 2. Verify Payment on Backend
+          try {
+            await axios.post("http://localhost:8080/api/payments/verify", {
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+              appointmentId: appointmentId,
+            });
+            toast.success("Payment Successful!");
+            setActiveView("DISCOVER");
+            resetBookingState();
+          } catch (err) {
+            toast.error("Payment verification failed");
+          }
+        },
+        prefill: {
+          name: bookingFor === "SELF" ? "User" : patientDetails.name,
+          contact: bookingFor === "SELF" ? "" : patientDetails.phone,
+        },
+        theme: { color: "#570df8" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      toast.error("Could not initiate payment");
+    }
+  };
   useEffect(() => {
     if (appointmentType === "ONLINE") {
       setPaymentMode("ONLINE");
@@ -147,45 +254,117 @@ export default function ClinicDiscovery() {
   });
 
   const bookAppointment = async () => {
-    setLoading(true);
-    try {
-      const payload = {
-        doctorId: selectedDoctor!.id,
-        appointmentDate: new Date().toISOString().split("T")[0],
-        appointmentTime: `${new Date().getHours().toString().padStart(2, "0")}:${new Date().getMinutes().toString().padStart(2, "0")}`,
-        appointmentType,
-        bookingFor,
-        paymentMode,
-        notes: "",
-      };
+    if (!selectedDoctor) return;
 
-      if (bookingFor === "OTHER") {
-        payload.patientDetails = {
-          name: patientDetails.name,
-          age: Number(patientDetails.age),
-          gender: patientDetails.gender,
-          phone: patientDetails.phone,
-        };
-      }
-
-      await axios.post("/spring-server/api/appointment/create", payload);
-      toast.success("Appointment booked successfully!");
-      setTimeout(() => {
-        resetBookingState();
-        setActiveView("DISCOVER");
-      }, 1500);
-    } catch (error) {
-      console.log("Error booking appointment:", error);
-      toast.error("Failed to book appointment. Please try again.");
-    } finally {
-      setLoading(false);
+    if (appointmentType === "ONLINE" && paymentMode === "ONLINE") {
+      await initiateOnlinePayment();
+    } else {
+      await createAppointment(); // IN_PERSON flow
     }
   };
 
+  const createAppointment = async (paymentDetails?: any) => {
+    const payload: any = {
+      doctorId: selectedDoctor!.id,
+      appointmentDate: new Date().toISOString().split("T")[0],
+      appointmentTime: `${new Date()
+        .getHours()
+        .toString()
+        .padStart(2, "0")}:${new Date()
+        .getMinutes()
+        .toString()
+        .padStart(2, "0")}`,
+      appointmentType,
+      bookingFor,
+      paymentMode,
+      notes: "",
+      paymentDetails, // optional
+    };
+
+    if (bookingFor === "OTHER") {
+      payload.patientDetails = {
+        name: patientDetails.name,
+        age: Number(patientDetails.age),
+        gender: patientDetails.gender,
+        phone: patientDetails.phone,
+      };
+    }
+
+    await axios.post("/spring-server/api/appointment/create", payload);
+
+    toast.success("Appointment booked successfully!");
+    resetBookingState();
+    setActiveView("DISCOVER");
+  };
+
+  const initiateOnlinePayment = async () => {
+    try {
+      // 1️⃣ Create Razorpay order (NO appointment yet)
+      const { data: order } = await axios.post(
+        "/spring-server/api/payments/create-order",
+        {
+          amount: selectedDoctor!.consultationFee * 100,
+          currency: "INR",
+        },
+      );
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Clinic Way",
+        description: `Appointment with ${selectedDoctor?.name}`,
+        order_id: order.razorpayOrderId,
+
+        handler: async (response: any) => {
+          try {
+            // 2️⃣ Verify payment
+            const verifyRes = await axios.post(
+              "/spring-server/api/payments/verify",
+              {
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              },
+            );
+
+            // 3️⃣ Payment success → NOW create appointment
+            await createAppointment({
+              paymentId: response.razorpay_payment_id,
+              orderId: response.razorpay_order_id,
+              method: "ONLINE",
+            });
+
+            toast.success("Payment successful & appointment confirmed!");
+          } catch (err) {
+            toast.error("Payment verification failed");
+          }
+        },
+
+        modal: {
+          ondismiss: () => {
+            toast.error("Payment cancelled");
+          },
+        },
+
+        prefill: {
+          name: bookingFor === "SELF" ? "User" : patientDetails.name,
+          contact: bookingFor === "SELF" ? "" : patientDetails.phone,
+        },
+
+        theme: { color: "#570df8" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      toast.error("Unable to initiate payment");
+    }
+  };
   if (loading) return <Loading />;
 
   return (
-    <>
+    <div className="px-4 py-8">
       {activeView === "DISCOVER" && (
         <>
           <div className="mx-auto">
@@ -363,7 +542,7 @@ export default function ClinicDiscovery() {
                     </div>
                     <div>
                       <p className="text-sm opacity-60">Doctor</p>
-                      <p className="font-bold">{selectedDoctor.user.name}</p>
+                      <p className="font-bold">{selectedDoctor.name}</p>
                     </div>
                   </div>
 
@@ -731,7 +910,7 @@ export default function ClinicDiscovery() {
                     <div className="flex justify-between">
                       <span className="opacity-70">Doctor</span>
                       <span className="font-semibold">
-                        {selectedDoctor?.user.name}
+                        {selectedDoctor?.name}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -762,9 +941,7 @@ export default function ClinicDiscovery() {
                   !paymentMode ||
                   (appointmentType === "ONLINE" && !paymentMode)
                 }
-                onClick={async () => {
-                  await bookAppointment();
-                }}
+                onClick={bookAppointment}
               >
                 <IconCheck size={20} />
                 {paymentMode === "ONLINE"
@@ -775,6 +952,6 @@ export default function ClinicDiscovery() {
           </div>
         </>
       )}
-    </>
+    </div>
   );
 }

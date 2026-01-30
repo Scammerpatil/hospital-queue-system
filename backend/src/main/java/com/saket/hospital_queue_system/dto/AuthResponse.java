@@ -1,6 +1,5 @@
 package com.saket.hospital_queue_system.dto;
 
-import com.saket.hospital_queue_system.entity.Role;
 import lombok.*;
 
 @Data
@@ -10,7 +9,7 @@ import lombok.*;
 public class AuthResponse {
   private String token;
   private String email;
-  private Role role;
+  private String role; // Changed from Role entity to String (PATIENT, DOCTOR, STAFF)
   private Long userId;
   private Long clinicId;
   private String message;

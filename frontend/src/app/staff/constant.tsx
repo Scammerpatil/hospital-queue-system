@@ -19,11 +19,6 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     icon: <IconCalendarEvent size={28} />,
   },
   {
-    title: "Patients",
-    path: "/staff/patients",
-    icon: <IconUsers size={28} />,
-  },
-  {
     title: "Doctors",
     path: "/staff/doctors",
     icon: <IconStethoscope size={28} />,

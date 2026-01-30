@@ -59,7 +59,7 @@ export default function Navbar() {
             </motion.div>
 
             <span className="text-2xl font-bold text-base-content group-hover:text-primary transition-colors">
-              Medi-Queue
+              Clinic-Way
             </span>
           </Link>
         </div>

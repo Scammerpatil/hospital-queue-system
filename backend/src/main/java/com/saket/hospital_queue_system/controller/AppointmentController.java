@@ -2,10 +2,14 @@ package com.saket.hospital_queue_system.controller;
 
 import com.saket.hospital_queue_system.dto.*;
 import com.saket.hospital_queue_system.service.AppointmentService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/appointment")
@@ -14,11 +18,10 @@ public class AppointmentController {
     @Autowired
     private AppointmentService appointmentService;
 
-    // Create appointment (JWT patient)
+    // COPILOT-FIX: CRITICAL - Added @Valid annotation and specific return type
     @PostMapping("/create")
-    public ResponseEntity<?> createAppointment(
-            @RequestBody CreateAppointmentRequest request
-    ) {
+    public ResponseEntity<AppointmentResponseDto> createAppointment(
+            @Valid @RequestBody CreateAppointmentRequest request) {
         try {
             String email = SecurityContextHolder
                     .getContext().getAuthentication().getName();
@@ -27,116 +30,113 @@ public class AppointmentController {
                     .body(appointmentService.createAppointment(email, request));
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
     // Clinic dashboard
     @GetMapping("/all-clinic")
-    public ResponseEntity<?> getAppointmentsByClinic(
-            @RequestParam Long clinicId
-    ) {
+    public ResponseEntity<java.util.List<AppointmentResponseDto>> getAppointmentsByClinic(
+            @RequestParam Long clinicId) {
         try {
             return ResponseEntity.ok(
-                    appointmentService.getAppointmentsByClinic(clinicId)
-            );
+                    appointmentService.getAppointmentsByClinic(clinicId));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     // Doctor dashboard
     @GetMapping("/doctor/list")
-    public ResponseEntity<?> getDoctorAppointments() {
+    public ResponseEntity<java.util.List<AppointmentResponseDto>> getDoctorAppointments() {
         try {
             String email = SecurityContextHolder
                     .getContext().getAuthentication().getName();
 
             return ResponseEntity.ok(
-                    appointmentService.getDoctorAppointments(email)
-            );
+                    appointmentService.getDoctorAppointments(email));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     // Patient dashboard - list own appointments
     @GetMapping("/patient/list")
-    public ResponseEntity<?> getPatientAppointments() {
+    public ResponseEntity<java.util.List<AppointmentResponseDto>> getPatientAppointments() {
         try {
             String email = SecurityContextHolder
                     .getContext().getAuthentication().getName();
 
             return ResponseEntity.ok(
-                    appointmentService.getPatientAppointments(email)
-            );
+                    appointmentService.getPatientAppointments(email));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     // Single appointment
     @GetMapping("/{id}")
-    public ResponseEntity<?> getAppointmentById(@PathVariable Long id) {
+    public ResponseEntity<AppointmentResponseDto> getAppointmentById(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(
-                    appointmentService.getAppointmentById(id)
-            );
+                    appointmentService.getAppointmentById(id));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
     // Cancel appointment
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> cancelAppointment(@PathVariable Long id) {
+    public ResponseEntity<AppointmentResponseDto> cancelAppointment(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(
-                    appointmentService.cancelAppointment(id)
-            );
+                    appointmentService.cancelAppointment(id));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
-    // Update status (doctor / staff)
+    // COPILOT-FIX: CRITICAL - Added @Valid annotation and specific return type
     @PutMapping("/{id}/status")
-    public ResponseEntity<?> updateStatus(
+    public ResponseEntity<AppointmentResponseDto> updateStatus(
             @PathVariable Long id,
-            @RequestBody UpdateAppointmentStatusRequest request
-    ) {
+            @Valid @RequestBody UpdateAppointmentStatusRequest request) {
         try {
             return ResponseEntity.ok(
-                    appointmentService.updateAppointmentStatus(id, request)
-            );
+                    appointmentService.updateAppointmentStatus(id, request));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
-    // Add meeting link
+    // COPILOT-FIX: CRITICAL - Added @Valid annotation and specific return type
     @PutMapping("/{id}/meeting-link")
-    public ResponseEntity<?> addMeetingLink(
+    public ResponseEntity<AppointmentResponseDto> addMeetingLink(
             @PathVariable Long id,
-            @RequestBody UpdateMeetingLinkRequest request
-    ) {
+            @Valid @RequestBody UpdateMeetingLinkRequest request) {
         try {
             String email = SecurityContextHolder
                     .getContext().getAuthentication().getName();
 
             return ResponseEntity.ok(
-                    appointmentService.addMeetingLink(id, email, request)
-            );
+                    appointmentService.addMeetingLink(id, email, request));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
+//    @PostMapping("/offline")
+//    public ResponseEntity<?> createOfflineAppointment(
+//            @RequestParam Long doctorId,
+//            @RequestParam LocalDate appointmentDate,
+//            @Valid @RequestBody OfflinePatientDTO request,
+//            Authentication authentication
+//    ) {
+//        appointmentService.createOfflineAppointment(
+//                authentication.getName(),
+//                doctorId,
+//                appointmentDate,
+//                request
+//        );
+//        return ResponseEntity.ok("Offline appointment created");
+//    }
 }

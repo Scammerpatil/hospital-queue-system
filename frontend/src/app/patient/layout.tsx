@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
 import SideNav from "./SideNav";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 
 const Component = ({ children }: { children: React.ReactNode }) => {
   const { setUser } = useAuth();
@@ -27,11 +28,11 @@ const Component = ({ children }: { children: React.ReactNode }) => {
     <html lang="en">
       <head>
         <title>
-          PATIENT | MediQueue - Smart Hospital Appointment Management System
+          PATIENT | ClinicWay - Smart Hospital Appointment Management System
         </title>
         <meta
           name="description"
-          content="MediQueue is a modern hospital appointment management system that enables patients to book appointments seamlessly while helping hospitals manage doctors, schedules, and patient flow efficiently using a secure and scalable platform."
+          content="ClinicWay is a modern hospital appointment management system that enables patients to book appointments seamlessly while helping hospitals manage doctors, schedules, and patient flow efficiently using a secure and scalable platform."
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -42,6 +43,10 @@ const Component = ({ children }: { children: React.ReactNode }) => {
         <link
           href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap"
           rel="stylesheet"
+        />
+        <Script
+          id="razorpay-checkout-js"
+          src="https://checkout.razorpay.com/v1/checkout.js"
         />
       </head>
       <body className={`antialiased roboto-condensed`}>

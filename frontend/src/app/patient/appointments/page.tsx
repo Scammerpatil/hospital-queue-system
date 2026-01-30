@@ -94,7 +94,7 @@ export default function MyAppointments() {
   if (loading) return <Loading />;
 
   return (
-    <>
+    <div className="px-4 py-8">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
         <div>
@@ -254,6 +254,6 @@ export default function MyAppointments() {
           })}
         </div>
       )}
-    </>
+    </div>
   );
 }

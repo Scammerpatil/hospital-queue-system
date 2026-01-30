@@ -19,11 +19,6 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     icon: <IconUsers size={28} />,
   },
   {
-    title: "Patient Records",
-    path: "/doctor/patients",
-    icon: <IconReportMedical size={28} />,
-  },
-  {
     title: "Profile",
     path: "/doctor/profile",
     icon: <IconUser size={28} />,

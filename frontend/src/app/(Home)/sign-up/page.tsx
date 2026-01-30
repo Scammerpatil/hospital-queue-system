@@ -21,6 +21,7 @@ import { useState } from "react";
 import axios, { AxiosResponse } from "axios";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { MAHARASHTRA_DISTRICTS, MAHARASHTRA_TALUKAS } from "@/helper/Constants";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -194,7 +195,7 @@ export default function SignUpPage() {
                   <IconUserPlus size={40} stroke={1.5} />
                 </div>
                 <h1 className="text-3xl font-black tracking-tight">
-                  Join Medi<span className="text-primary">Queue</span>
+                  Join Clinic<span className="text-primary">Way</span>
                 </h1>
                 <p className="text-sm opacity-60 font-medium">
                   Create your account to start managing appointments
@@ -225,7 +226,7 @@ export default function SignUpPage() {
                   <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
                     Full Name
                   </legend>
-                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                  <div className="input input-primary w-full">
                     <IconUser className="opacity-30" size={18} />
                     <input
                       type="text"
@@ -242,7 +243,7 @@ export default function SignUpPage() {
                   <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
                     Phone Number
                   </legend>
-                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                  <div className="input input-primary w-full">
                     <IconPhone className="opacity-30" size={18} />
                     <input
                       type="tel"
@@ -261,7 +262,7 @@ export default function SignUpPage() {
                   Email Address
                 </legend>
                 <div className="join">
-                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20 join-item">
+                  <div className="input input-primary w-full join-item">
                     <IconMail className="opacity-30" size={18} />
                     <input
                       type="email"
@@ -330,7 +331,7 @@ export default function SignUpPage() {
                   <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
                     Clinic Name
                   </legend>
-                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                  <div className="input input-primary w-full">
                     <IconHospital className="opacity-30" size={18} />
                     <input
                       type="text"
@@ -347,41 +348,57 @@ export default function SignUpPage() {
                   <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
                     Clinic District
                   </legend>
-                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                  <div className="select select-primary w-full">
                     <IconHospital className="opacity-30" size={18} />
-                    <input
-                      type="text"
+                    <select
                       className="grow"
                       value={form.clinicDistrict}
-                      placeholder="District"
                       onChange={(e) =>
                         handleInputChange("clinicDistrict", e.target.value)
                       }
-                    />
+                    >
+                      <option value="" disabled>
+                        Select District
+                      </option>
+                      {MAHARASHTRA_DISTRICTS.map((district) => (
+                        <option key={district} value={district}>
+                          {district}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </fieldset>
                 <fieldset className="fieldset">
                   <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
                     Clinic Taluka
                   </legend>
-                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                  <div className="select select-primary w-full">
                     <IconHospital className="opacity-30" size={18} />
-                    <input
-                      type="text"
+                    <select
                       className="grow"
                       value={form.clinicTaluka}
-                      placeholder="Taluka"
                       onChange={(e) =>
                         handleInputChange("clinicTaluka", e.target.value)
                       }
-                    />
+                    >
+                      <option value="" disabled>
+                        Select Taluka
+                      </option>
+                      {MAHARASHTRA_TALUKAS[form.clinicDistrict]?.map(
+                        (taluka) => (
+                          <option key={taluka} value={taluka}>
+                            {taluka}
+                          </option>
+                        ),
+                      )}
+                    </select>
                   </div>
                 </fieldset>
                 <fieldset className="fieldset">
                   <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
                     Clinic State
                   </legend>
-                  <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                  <div className="input input-primary w-full">
                     <IconHospital className="opacity-30" size={18} />
                     <input
                       type="text"
@@ -400,7 +417,7 @@ export default function SignUpPage() {
                     Clinic Address
                   </legend>
                   <textarea
-                    className="textarea textarea-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20"
+                    className="textarea textarea-primary w-full"
                     value={form.clinicAddress}
                     placeholder="Clinic Address"
                     onChange={(e) =>
@@ -416,7 +433,7 @@ export default function SignUpPage() {
                 <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
                   Password
                 </legend>
-                <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                <div className="input input-primary w-full">
                   <IconLock className="opacity-30" size={18} />
                   <input
                     type={isPasswordVisible ? "text" : "password"}
@@ -443,7 +460,7 @@ export default function SignUpPage() {
                 <legend className="fieldset-legend uppercase text-[10px] font-bold opacity-70">
                   Confirm
                 </legend>
-                <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+                <div className="input input-primary w-full">
                   <IconLock className="opacity-30" size={18} />
                   <input
                     type={isPasswordVisible ? "text" : "password"}

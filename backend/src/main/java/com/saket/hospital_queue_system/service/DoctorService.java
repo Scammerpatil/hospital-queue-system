@@ -2,14 +2,17 @@ package com.saket.hospital_queue_system.service;
 
 import com.saket.hospital_queue_system.dto.AppointmentDto;
 import com.saket.hospital_queue_system.dto.DoctorDashboardResponse;
+import com.saket.hospital_queue_system.dto.DoctorListResponse;
 import com.saket.hospital_queue_system.dto.DoctorProfileResponse;
 import com.saket.hospital_queue_system.dto.UpdateDoctorProfileRequest;
 import com.saket.hospital_queue_system.entity.Appointment;
+import com.saket.hospital_queue_system.entity.AppointmentStatus;
 import com.saket.hospital_queue_system.entity.Doctor;
 import com.saket.hospital_queue_system.entity.User;
 import com.saket.hospital_queue_system.repository.AppointmentRepository;
 import com.saket.hospital_queue_system.repository.DoctorRepository;
 import com.saket.hospital_queue_system.repository.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -32,6 +35,7 @@ public class DoctorService {
     @Autowired
     private AppointmentRepository appointmentRepository;
 
+    @Transactional(readOnly = true)
     public DoctorDashboardResponse getDoctorDashboard(String email) {
         logger.info("Getting dashboard for email: {}", email);
 
@@ -47,7 +51,7 @@ public class DoctorService {
         // Count statistics
         int totalAppointments = allAppointments.size();
         int completedAppointments = (int) allAppointments.stream()
-                .filter(a -> "COMPLETED".equals(a.getStatus()))
+                .filter(a -> AppointmentStatus.COMPLETED.equals(a.getStatus()))
                 .count();
 
         // Get today's appointments
@@ -84,16 +88,25 @@ public class DoctorService {
         return response;
     }
 
-    public List<Doctor> getAvailableDoctors() {
+    @Transactional(readOnly = true)
+    public List<DoctorListResponse> getAvailableDoctors() {
         logger.debug("Fetching available doctors");
-        return doctorRepository.findByIsAvailableTrue();
+        return doctorRepository.findByIsAvailableTrue()
+                .stream()
+                .map(this::convertToDoctorListResponse)
+                .collect(Collectors.toList());
     }
 
-    public List<Doctor> getDoctorsForClinic(Long clinicId) {
+    @Transactional(readOnly = true)
+    public List<DoctorListResponse> getDoctorsForClinic(Long clinicId) {
         logger.debug("Fetching doctors for clinic ID: {}", clinicId);
-        return doctorRepository.findByClinicId(clinicId);
+        return doctorRepository.findByClinicId(clinicId)
+                .stream()
+                .map(this::convertToDoctorListResponse)
+                .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public DoctorProfileResponse getDoctorProfile(String email) {
         logger.info("Getting doctor profile for email: {}", email);
 
@@ -158,5 +171,33 @@ public class DoctorService {
         response.setCreatedAt(doctor.getCreatedAt());
         response.setUpdatedAt(doctor.getUpdatedAt());
         return response;
+    }
+
+    private DoctorListResponse convertToDoctorListResponse(Doctor doctor) {
+        User user = doctor.getUser();
+        DoctorListResponse.ClinicBasicInfo clinicInfo = null;
+
+        if (doctor.getClinic() != null) {
+            clinicInfo = DoctorListResponse.ClinicBasicInfo.builder()
+                    .id(doctor.getClinic().getId())
+                    .name(doctor.getClinic().getName())
+                    .address(doctor.getClinic().getAddress())
+                    .build();
+        }
+
+        return DoctorListResponse.builder()
+                .id(doctor.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .profileImage(user.getProfileImage())
+                .specialization(doctor.getSpecialization())
+                .licenseNumber(doctor.getLicenseNumber())
+                .bio(doctor.getBio())
+                .consultationFee(doctor.getConsultationFee())
+                .availableSlots(doctor.getAvailableSlots())
+                .isAvailable(doctor.getIsAvailable())
+                .clinic(clinicInfo)
+                .build();
     }
 }

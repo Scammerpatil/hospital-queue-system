@@ -11,15 +11,15 @@ export const receptionistService = {
       phone: string;
       email?: string;
       address?: string;
-    }
+    },
   ) {
     console.log(
       "ReceptionistService: adding offline patient for doctor:",
-      doctorId
+      doctorId,
     );
     return await api.post(
-      `/api/appointments/offline?doctorId=${doctorId}&appointmentDate=${appointmentDate}`,
-      patientData
+      `/appointments/offline?doctorId=${doctorId}&appointmentDate=${appointmentDate}`,
+      patientData,
     );
   },
 
@@ -27,7 +27,7 @@ export const receptionistService = {
     console.log(
       "ReceptionistService: updating appointment status:",
       appointmentId,
-      status
+      status,
     );
     return await api.patch(`/api/appointments/${appointmentId}/status`, {
       status,

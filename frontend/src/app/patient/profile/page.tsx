@@ -24,7 +24,7 @@ interface PatientProfile {
   name: string;
   email: string;
   phone: string;
-  age: string;
+  age: number;
   gender: string;
   address: string;
   medicalHistory: string;
@@ -38,7 +38,6 @@ export default function PatientProfile() {
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<PatientProfile>>({});
   const [saving, setSaving] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -61,7 +60,7 @@ export default function PatientProfile() {
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -71,8 +70,9 @@ export default function PatientProfile() {
     e.preventDefault();
     try {
       setSaving(true);
+      formData.age = Number(formData.age) || 0;
       const response = await patientService.updatePatientProfile(
-        formData as any
+        formData as any,
       );
       const updatedProfile = response.data || response;
       setProfile(updatedProfile as PatientProfile);
@@ -84,7 +84,7 @@ export default function PatientProfile() {
       setError(err.message || "Failed to update profile");
       console.error("Error updating profile:", err);
       toast.error(
-        "Failed to update profile: " + (err.message || "Unknown error")
+        "Failed to update profile: " + (err.message || "Unknown error"),
       );
     } finally {
       setSaving(false);
@@ -193,6 +193,7 @@ export default function PatientProfile() {
                     <IconCalendarEvent size={18} className="opacity-30" />
                     <input
                       name="age"
+                      type="number"
                       disabled={!editing}
                       className={`input w-full font-bold ${
                         editing ? "input-primary" : "input-ghost"

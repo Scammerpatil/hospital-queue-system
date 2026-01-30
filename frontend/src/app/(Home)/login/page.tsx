@@ -44,9 +44,10 @@ export default function LoginPage() {
 
       if (response && response.role) {
         toast.success(`Welcome back, ${response.role}!`);
+        console.log("Login successful:", response);
         router.push(`/${response.role.toLowerCase()}/dashboard`);
       }
-    } catch (error) {
+    } catch (error: any) {
       toast.error(
         error.response?.data?.message || "Login failed. Please try again.",
       );
@@ -57,14 +58,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-base-200 flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-[calc(100vh-4rem)] bg-base-200 flex items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="card bg-base-100 shadow-2xl w-full max-w-md z-10 border border-base-content/5"
+        className="card bg-base-100 shadow-2xl w-full max-w-lg z-10 border border-base-content/5"
       >
         <div className="card-body p-8 lg:px-10 lg:py-8">
           {/* Header */}
@@ -73,7 +74,7 @@ export default function LoginPage() {
               <IconUser size={40} stroke={1.5} />
             </div>
             <h1 className="text-3xl font-black tracking-tight">
-              Medi<span className="text-primary">Queue</span> Access
+              Clinc<span className="text-primary">Way</span> Access
             </h1>
             <p className="text-sm opacity-60 font-medium">
               Manage your health and appointments
@@ -86,7 +87,7 @@ export default function LoginPage() {
               <legend className="fieldset-legend">
                 Email Address <span className="text-error">*</span>
               </legend>
-              <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20">
+              <div className="input input-primary w-full">
                 <IconMail className="opacity-30" size={20} />
                 <input
                   type="email"
@@ -103,7 +104,7 @@ export default function LoginPage() {
                 Password <span className="text-error">*</span>{" "}
               </legend>
               <div className="join">
-                <div className="input input-primary w-full bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20 join-item">
+                <div className="input input-primary w-full join-item">
                   <IconLock className="opacity-30" size={20} />
                   <input
                     type={isPasswordVisible ? "text" : "password"}
@@ -117,7 +118,7 @@ export default function LoginPage() {
                 </div>
                 <button
                   onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                  className="btn btn-ghost join-item bg-base-200/50 focus:bg-base-100 transition-all border-none focus:ring-2 ring-primary/20"
+                  className="btn btn-ghost join-item"
                 >
                   {isPasswordVisible ? (
                     <IconEyeOff size={16} />

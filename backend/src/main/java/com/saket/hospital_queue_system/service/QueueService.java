@@ -7,12 +7,12 @@ import com.saket.hospital_queue_system.dto.QueueEntryDto;
 import com.saket.hospital_queue_system.entity.*;
 import com.saket.hospital_queue_system.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -124,6 +124,7 @@ public class QueueService {
     return convertToQueueStatusResponse(savedQueue);
   }
 
+  @Transactional(readOnly = true)
   public QueueStatusResponse getQueueStatus(String patientEmail) {
     logger.info("Getting queue status for patient: {}", patientEmail);
 
@@ -139,6 +140,7 @@ public class QueueService {
     return convertToQueueStatusResponse(queue);
   }
 
+  @Transactional(readOnly = true)
   public DoctorQueueResponse getDoctorQueue(String doctorEmail) {
     logger.info("Getting queue for doctor: {}", doctorEmail);
 

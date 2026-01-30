@@ -2,6 +2,7 @@ package com.saket.hospital_queue_system.controller;
 
 import com.saket.hospital_queue_system.dto.DoctorCreateDTO;
 import com.saket.hospital_queue_system.dto.DoctorDashboardResponse;
+import com.saket.hospital_queue_system.dto.DoctorListResponse;
 import com.saket.hospital_queue_system.dto.DoctorProfileResponse;
 import com.saket.hospital_queue_system.dto.UpdateDoctorProfileRequest;
 import com.saket.hospital_queue_system.entity.Clinic;
@@ -19,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -42,29 +44,46 @@ public class DoctorController {
   @Autowired
   private ClinicService clinicService;
 
-  @PostMapping("add-doctor")
-  public ResponseEntity<String> addDoctor(@RequestBody DoctorCreateDTO doctor) {
+  @Transactional
+  @PostMapping("/add-doctor")
+  public ResponseEntity<String> addDoctor(@Valid @RequestBody DoctorCreateDTO request) {
     System.out.println("DoctorController: POST /api/doctor/add-doctor");
-    System.out.println(doctor);
     try {
-        Doctor newDoctor = new Doctor();
-        User user = doctor.getUser();
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(Role.valueOf("DOCTOR"));
-        userRepository.save(user);
-        newDoctor.setUser(user);
-        newDoctor.setSpecialization(doctor.getDoctor().getSpecialization());
-        newDoctor.setConsultationFee(doctor.getDoctor().getConsultationFee());
-        newDoctor.setLicenseNumber(doctor.getDoctor().getLicenseNumber());
-        newDoctor.setBio(doctor.getDoctor().getBio());
-        Clinic clinic = clinicService.getClinicById(doctor.getClinicId());
-        newDoctor.setClinic(clinic);
-        doctorRepository.save(newDoctor);
-        System.out.println("DoctorController: Doctor added with email: " + user.getEmail());
+      // COPILOT-FIX: CRITICAL - Completely refactored to use DTO instead of entities
+      // Create User
+      User user = new User();
+      user.setEmail(request.getEmail());
+      user.setName(request.getName());
+      user.setPhone(request.getPhone());
+      user.setPassword(passwordEncoder.encode(request.getPassword()));
+      user.setProfileImage(request.getProfileImage());
+      user.setRole(Role.DOCTOR);
+      user.setIsActive(true);
+      User savedUser = userRepository.save(user);
+
+      // Create Doctor profile
+      Doctor newDoctor = new Doctor();
+      newDoctor.setUser(savedUser);
+      newDoctor.setSpecialization(request.getSpecialization());
+      newDoctor.setConsultationFee(request.getConsultationFee());
+      newDoctor.setLicenseNumber(request.getLicenseNumber());
+      newDoctor.setBio(request.getBio());
+
+      // Associate with clinic
+      Clinic clinic = clinicService.getClinicById(request.getClinicId());
+      if (clinic == null) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body("Clinic not found");
+      }
+      newDoctor.setClinic(clinic);
+
+      doctorRepository.save(newDoctor);
+      System.out.println("DoctorController: Doctor added with email: " + user.getEmail());
       return ResponseEntity.status(HttpStatus.CREATED).body("Doctor added successfully");
     } catch (Exception e) {
       System.out.println("DoctorController: Error adding doctor: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error adding doctor");
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body("Error adding doctor: " + e.getMessage());
     }
   }
 
@@ -91,10 +110,10 @@ public class DoctorController {
   }
 
   @GetMapping("/available")
-  public ResponseEntity<List<Doctor>> getAvailableDoctors() {
+  public ResponseEntity<List<DoctorListResponse>> getAvailableDoctors() {
     System.out.println("DoctorController: GET /api/doctor/available");
     try {
-      List<Doctor> doctors = doctorService.getAvailableDoctors();
+      List<DoctorListResponse> doctors = doctorService.getAvailableDoctors();
       return ResponseEntity.ok(doctors);
     } catch (Exception e) {
       System.out.println("DoctorController: Error retrieving available doctors: " + e.getMessage());
@@ -103,10 +122,10 @@ public class DoctorController {
   }
 
   @GetMapping
-  public ResponseEntity<List<Doctor>> getAllDoctors() {
+  public ResponseEntity<List<DoctorListResponse>> getAllDoctors() {
     System.out.println("DoctorController: GET /api/doctor");
     try {
-      List<Doctor> doctors = doctorService.getAvailableDoctors();
+      List<DoctorListResponse> doctors = doctorService.getAvailableDoctors();
       return ResponseEntity.ok(doctors);
     } catch (Exception e) {
       System.out.println("DoctorController: Error retrieving doctors: " + e.getMessage());
@@ -115,10 +134,10 @@ public class DoctorController {
   }
 
   @GetMapping("/clinic/{clinicId}")
-  public ResponseEntity<List<Doctor>> getDoctorsForClinic(@PathVariable Long clinicId) {
+  public ResponseEntity<List<DoctorListResponse>> getDoctorsForClinic(@PathVariable Long clinicId) {
     System.out.println("DoctorController: GET /api/doctor/clinic/" + clinicId);
     try {
-      List<Doctor> doctors = doctorService.getDoctorsForClinic(clinicId);
+      List<DoctorListResponse> doctors = doctorService.getDoctorsForClinic(clinicId);
       return ResponseEntity.ok(doctors);
     } catch (Exception e) {
       System.out.println("DoctorController: Error retrieving doctors for clinic: " + e.getMessage());

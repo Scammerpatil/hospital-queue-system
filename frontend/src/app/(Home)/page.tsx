@@ -41,7 +41,7 @@ export default function HomePage() {
               Better Care.
             </h1>
             <p className="mt-6 text-xl text-base-content/70 leading-relaxed">
-              MediSlot eliminates the chaos of manual scheduling. We connect
+              ClinicWay eliminates the chaos of manual scheduling. We connect
               patients with the right specialists through a real-time,
               zero-error booking engine. Reduce waiting times by up to 60%.
             </p>
@@ -111,11 +111,11 @@ export default function HomePage() {
               The Problem & Solution
             </h2>
             <h3 className="text-4xl font-black mb-8">
-              Why Healthcare Systems Choose MediSlot
+              Why Healthcare Systems Choose ClinicWay
             </h3>
             <p className="max-w-3xl mx-auto text-lg text-base-content/70">
               The traditional "Wait and Watch" model is broken. Patients are
-              frustrated, and doctors are overwhelmed. MediSlot introduces an
+              frustrated, and doctors are overwhelmed. ClinicWay introduces an
               **Automated Resource Orchestrator** that balances hospital
               capacity with patient demand instantly.
             </p>
@@ -170,7 +170,7 @@ export default function HomePage() {
               </p>
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <IconMail className="text-primary" /> contact@medislot.com
+                  <IconMail className="text-primary" /> contact@ClinicWay.com
                 </div>
               </div>
             </motion.div>

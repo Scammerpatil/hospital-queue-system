@@ -24,11 +24,11 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     path: "/patient/appointments",
     icon: <IconClipboardList size={28} />,
   },
-  {
-    title: "Medical Records",
-    path: "/patient/records",
-    icon: <IconReportMedical size={28} />,
-  },
+  // {
+  //   title: "Medical Records",
+  //   path: "/patient/records",
+  //   icon: <IconReportMedical size={28} />,
+  // },
   {
     title: "Profile",
     path: "/patient/profile",

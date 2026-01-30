@@ -13,10 +13,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>MediQueue - Smart Hospital Appointment Management System</title>
+        <title>ClinicWay - Smart Hospital Appointment Management System</title>
         <meta
           name="description"
-          content="MediQueue is a modern hospital appointment management system that enables patients to book appointments seamlessly while helping hospitals manage doctors, schedules, and patient flow efficiently using a secure and scalable platform."
+          content="ClinicWay is a modern hospital appointment management system that enables patients to book appointments seamlessly while helping hospitals manage doctors, schedules, and patient flow efficiently using a secure and scalable platform."
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link

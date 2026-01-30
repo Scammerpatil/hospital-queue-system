@@ -65,7 +65,7 @@ const SideNav = ({ children }: { children: React.ReactNode }) => {
 
             <div className="navbar lg:hidden px-2">
               <Link
-                href={`/${user.role}/dashboard`}
+                href={`/${user.role.toLowerCase()}/dashboard`}
                 className="flex h-16 w-full items-center space-x-3"
               >
                 <motion.div
@@ -78,7 +78,7 @@ const SideNav = ({ children }: { children: React.ReactNode }) => {
                 </motion.div>
 
                 <span className="text-2xl font-bold text-base-content group-hover:text-primary transition-colors">
-                  Medi-Queue
+                  Clinic-Way
                 </span>
               </Link>
 
@@ -111,8 +111,8 @@ const SideNav = ({ children }: { children: React.ReactNode }) => {
                     <hr className="my-2 border-base-content" />
                     <div className="flex flex-col">
                       <Link
-                        className="text-left px-4 py-2 text-base-content hover:bg-base-200 transition duration-200 font-semibold"
-                        href={`/${user.role}/profile`}
+                        className="btn btn-neutral btn-outline mb-2"
+                        href={`/${user.role.toLowerCase()}/profile`}
                       >
                         My Account
                       </Link>
@@ -158,8 +158,8 @@ const SideNav = ({ children }: { children: React.ReactNode }) => {
                     <hr className="my-2 border-base-content" />
                     <div className="flex flex-col">
                       <Link
-                        className="text-left px-4 py-2 text-base-content hover:bg-base-200 transition duration-200 font-semibold"
-                        href={`/${user.role}/profile`}
+                        className="btn btn-neutral btn-outline mb-2"
+                        href={`/${user.role.toLowerCase()}/profile`}
                       >
                         My Account
                       </Link>
@@ -193,7 +193,7 @@ const SideNav = ({ children }: { children: React.ReactNode }) => {
           ></label>
           <div className="menu bg-base-200 text-base-content min-h-full w-80 p-4">
             <Link
-              href={`/${user.role}/dashboard`}
+              href={`/${user.role.toLowerCase()}/dashboard`}
               className="flex h-16 w-full flex-row items-center justify-center space-x-3 border-b border-base-content md:justify-start md:px-6"
             >
               <motion.div
@@ -206,7 +206,7 @@ const SideNav = ({ children }: { children: React.ReactNode }) => {
               </motion.div>
 
               <span className="text-2xl font-bold text-base-content group-hover:text-primary transition-colors">
-                Medi-Queue
+                Clinic-Way
               </span>
             </Link>
             <div className="flex flex-col space-y-2 mt-10 md:px-6">

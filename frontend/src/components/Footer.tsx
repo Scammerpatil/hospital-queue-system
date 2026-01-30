@@ -14,7 +14,7 @@ const Footer = () => {
         <div className="flex items-center gap-2 mb-4">
           <IconHospitalCircle size={32} className="text-primary" />
           <p className="font-bold text-2xl tracking-tighter">
-            MEDI<span className="text-primary">QUEUE</span>
+            CLINIC<span className="text-primary">WAY</span>
           </p>
         </div>
         <p className="font-semibold">
@@ -67,7 +67,7 @@ const Footer = () => {
         </div>
       </nav>
       <aside>
-        <p>Copyright © 2025 MediQueue. All rights reserved.</p>
+        <p>Copyright © 2025 ClinicWay. All rights reserved.</p>
       </aside>
     </footer>
   );

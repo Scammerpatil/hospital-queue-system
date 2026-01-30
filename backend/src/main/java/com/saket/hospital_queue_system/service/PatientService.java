@@ -11,6 +11,7 @@ import com.saket.hospital_queue_system.repository.AppointmentRepository;
 import com.saket.hospital_queue_system.repository.PatientRepository;
 import com.saket.hospital_queue_system.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ public class PatientService {
         @Autowired
         private AppointmentRepository appointmentRepository;
 
+        @Transactional(readOnly = true)
         public PatientDashboardResponse getPatientDashboard(String email) {
                 logger.info("Getting dashboard for email: {}", email);
 
@@ -85,6 +87,7 @@ public class PatientService {
                 return response;
         }
 
+        @Transactional(readOnly = true)
         public PatientProfileResponse getPatientProfile(String email) {
                 logger.info("Getting profile for email: {}", email);
 
@@ -97,6 +100,7 @@ public class PatientService {
                 return convertToProfileResponse(user, patient);
         }
 
+        @Transactional(readOnly = true)
         public PatientProfileResponse getPatientById(Long patientId) {
                 logger.info("Getting patient by ID: {}", patientId);
 

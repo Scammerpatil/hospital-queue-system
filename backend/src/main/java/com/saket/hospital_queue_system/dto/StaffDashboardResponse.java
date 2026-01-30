@@ -12,7 +12,6 @@ public class StaffDashboardResponse {
   private String email;
   private String department;
   private Boolean isActive;
-  private Integer totalPatients;
   private Integer totalDoctors;
   private Integer totalAppointments;
   private Integer todayAppointments;

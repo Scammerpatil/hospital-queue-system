@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8080";
+import { api } from "./api";
 
 export const authService = {
   async signup(data: {
@@ -11,43 +11,20 @@ export const authService = {
     specialization?: string;
     department?: string;
   }) {
-    const response = await fetch(`/spring-server/api/auth/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.log(response);
-      throw new Error(error.message || "Signup failed");
-    }
-    return response;
+    return api.post("/auth/signup", data);
   },
 
   async login(email: string, password: string) {
-    const response = await fetch(`/spring-server/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Login failed");
-    }
-    const result = await response.json();
-    return result;
+    // THIS NOW STORES THE COOKIE ✅
+    return api.post("/auth/login", { email, password });
   },
 
   async getCurrentUser() {
-    const response = await fetch(`/spring-server/api/auth/me`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    // Cookie will be sent automatically ✅
+    return api.get("/auth/me");
+  },
 
-    return response.json();
+  async logout() {
+    return api.post("/auth/logout", {});
   },
 };

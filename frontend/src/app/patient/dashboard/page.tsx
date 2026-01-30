@@ -87,7 +87,7 @@ export default function PatientDashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 py-8">
       {/* --- HEADER SECTION --- */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-10">
         <div className="flex items-center gap-4">
